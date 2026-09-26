@@ -1,0 +1,228 @@
+.hud {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  animation: hubIn 700ms var(--ease-out) both;
+}
+.hud button {
+  pointer-events: auto;
+}
+.day {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  left: 16px;
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 10px 18px;
+  border-radius: var(--r-pill);
+}
+.dayN {
+  font-size: 18px;
+}
+.phase {
+  font-size: var(--fs-sm);
+  padding: 2px 10px;
+  border-radius: var(--r-pill);
+  background: var(--c-mist-soft);
+  color: var(--c-mist-ink);
+}
+.phase[data-phase='dusk'] {
+  background: var(--c-clay-soft);
+  color: var(--c-clay-deep);
+}
+.topRight {
+  position: absolute;
+  top: max(16px, env(safe-area-inset-top));
+  right: 16px;
+  display: flex;
+  gap: var(--s-2);
+  pointer-events: auto;
+}
+.level {
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: var(--c-gold);
+}
+.wallet {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  height: var(--hit);
+  padding: 0 16px 0 12px;
+  border-radius: var(--r-pill);
+  font-weight: 700;
+  font-size: var(--fs-lg);
+}
+.dock {
+  position: absolute;
+  bottom: max(18px, env(safe-area-inset-bottom));
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: var(--s-2);
+  align-items: center;
+  pointer-events: auto;
+}
+.dockBar {
+  padding: 8px;
+  border-radius: var(--r-pill);
+  max-width: calc(100vw - 24px);
+}
+.dockBar button {
+  white-space: nowrap;
+  flex-shrink: 0;
+  padding: 0 16px;
+}
+.confirm {
+  position: absolute;
+  bottom: calc(max(18px, env(safe-area-inset-bottom)) + 72px);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: var(--s-2);
+  padding: 8px 8px 8px 18px;
+  border-radius: var(--r-pill);
+  font-size: var(--fs-sm);
+  color: var(--c-ink-2);
+  white-space: nowrap;
+  pointer-events: auto;
+  animation: confirmIn 320ms var(--ease-spring) both;
+}
+.careHint {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 18px;
+  border-radius: var(--r-pill);
+  font-size: var(--fs-sm);
+  color: var(--c-ink-2);
+  white-space: nowrap;
+}
+.dots {
+  display: inline-flex;
+  gap: 4px;
+  margin-left: 2px;
+}
+.dots i {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: color-mix(in srgb, var(--c-charcoal) 14%, transparent);
+  transition: background var(--t-med) var(--ease-out);
+}
+.dots i[data-on='true'] {
+  background: var(--c-mist);
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--c-mist) 30%, transparent);
+}
+.tip {
+  position: fixed;
+  transform: translate(-50%, calc(-100% - 18px));
+  padding: 8px 14px;
+  border-radius: var(--r-md);
+  font-size: var(--fs-sm);
+  white-space: nowrap;
+  animation: tipIn 260ms var(--ease-spring) both;
+}
+.brief {
+  text-align: left;
+}
+.briefHead {
+  display: flex;
+  gap: var(--s-4);
+  align-items: center;
+}
+.avatar {
+  width: 54px;
+  height: 54px;
+  border-radius: 20px;
+  display: grid;
+  place-items: center;
+  color: var(--c-white);
+  font-family: var(--font-display);
+  font-size: 24px;
+  font-weight: 700;
+  box-shadow:
+    inset 0 -6px 12px color-mix(in srgb, var(--c-black) 10%, transparent),
+    var(--shadow-1);
+}
+.briefName {
+  margin: 0;
+  font-size: 22px;
+}
+.briefShop {
+  margin: 2px 0 0;
+  color: var(--c-ink-3);
+  font-size: var(--fs-sm);
+}
+.quote {
+  margin: var(--s-4) 0;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-md);
+  background: color-mix(in srgb, var(--c-white) 55%, transparent);
+  color: var(--c-ink-2);
+  line-height: 1.7;
+}
+.order {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--s-2);
+}
+.order li {
+  display: grid;
+  grid-template-columns: 34px 1fr auto;
+  align-items: center;
+  gap: var(--s-3);
+  font-size: var(--fs-md);
+}
+.order b {
+  font-size: var(--fs-lg);
+}
+.movesLine {
+  margin: var(--s-4) 0 var(--s-5);
+  color: var(--c-ink-3);
+  font-size: var(--fs-sm);
+}
+.briefActions {
+  display: grid;
+  grid-template-columns: 1fr 2fr;
+  gap: var(--s-2);
+}
+@keyframes hubIn {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes confirmIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px) scale(0.96);
+  }
+}
+@keyframes tipIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, calc(-100% - 8px)) scale(0.9);
+  }
+}
+@media (max-width: 900px) {
+  .dockBar {
+    flex-wrap: wrap;
+    justify-content: center;
+    width: calc(100% - 24px);
+    border-radius: var(--r-lg);
+  }
+}
+@media (max-width: 560px) {
+  .dockBar {
+    width: calc(100% - 24px);
+    justify-content: center;
+  }
+  .dockBar button {
+    padding: 0 12px;
+  }
+}

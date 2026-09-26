@@ -1,0 +1,8 @@
+[
+  { "e": "session_start", "t": 0, "sid": "b", "build": "x", "ua": "test", "dpr": 2, "quality": "auto", "w": 1024, "h": 768 },
+  { "e": "run_start", "t": 10000, "sid": "b", "commissionId": "T1", "attempt": 0, "day": 1, "runSeed": 1, "fieldRipe": 49, "fieldUnripe": 0 },
+  { "e": "first_input", "t": 30000, "sid": "b", "msSinceRunStart": 20000 },
+  { "e": "run_end", "t": 60000, "sid": "b", "commissionId": "T1", "result": "won", "movesLeft": 5, "stars": 0, "deliveredTotal": 10, "surplusTotal": 0, "dewdrops": 70, "durationMs": 50000 },
+  { "e": "care", "t": 80000, "sid": "b", "verb": "water", "target": "2", "day": 1, "phase": "morning", "prompted": true },
+  { "e": "run_start", "t": 100000, "sid": "b", "commissionId": "C02", "attempt": 0, "day": 2, "runSeed": 4, "fieldRipe": 20, "fieldUnripe": 10 }
+]

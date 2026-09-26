@@ -1,0 +1,145 @@
+@font-face {
+  font-family: 'LXGW WenKai';
+  src: url('/fonts/wenkai-subset.woff2') format('woff2');
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+:root {
+  /* 01 §13.1 palette */
+  --c-linen: #f7f1e8;
+  --c-sage: #5b8f6b;
+  --c-clay: #d9a39a;
+  --c-mist: #a7c4d0;
+  --c-charcoal: #2c2a28;
+
+  /* derived tints */
+  --c-linen-deep: #efe6d8;
+  --c-linen-shade: #e4d8c6;
+  --c-sage-deep: #4a7a5a;
+  --c-sage-soft: #dfe9df;
+  --c-clay-deep: #c4857b;
+  --c-clay-soft: #f3e1dc;
+  --c-mist-soft: #e3edf1;
+  --c-ink-2: rgb(44 42 40 / 72%);
+  --c-ink-3: rgb(44 42 40 / 48%);
+  --c-ink-4: rgb(44 42 40 / 14%);
+  --c-gold: #d8b25a;
+  --c-dew: #7fb2c8;
+  --c-honey: #e6bc52;
+  --c-night: #8c97b8;
+  --c-wood: #e6d5bd;
+  --c-wood-shade: #d2bc9e;
+  --c-lantern: #fff1c9;
+  --c-white: #ffffff;
+  --c-black: #000000;
+  --c-paper: #fffcf6;
+  --c-cream: #fff6de;
+  --c-umber: #3c2c1e;
+  --c-night-deep: #2e3a60;
+  --c-night-ink: #14182c;
+  --c-ink-dark: #1c1b1a;
+  --c-linen-dim: #eee8df;
+  --c-alert: #c4574a;
+  --c-mist-ink: #4f6f7c;
+  --c-night-text: #eef1fb;
+  --c-sage-light: #7fae88;
+
+  /* crops (02 §16.1) */
+  --c-carrot: #e8894a;
+  --c-tomato: #d2553f;
+  --c-corn: #e3be4f;
+  --c-eggplant: #7b5ba6;
+  --c-blueberry: #4e78c4;
+
+  /* glass surfaces */
+  --glass-bg: rgb(251 248 243 / 72%);
+  --glass-bg-strong: rgb(251 248 243 / 88%);
+  --glass-border: rgb(255 255 255 / 70%);
+  --glass-edge: rgb(44 42 40 / 7%);
+  --glass-blur: saturate(1.4) blur(18px);
+
+  --shadow-1: 0 1px 2px rgb(60 44 30 / 8%), 0 4px 14px rgb(60 44 30 / 8%);
+  --shadow-2: 0 2px 4px rgb(60 44 30 / 8%), 0 12px 32px rgb(60 44 30 / 12%);
+  --shadow-press: 0 1px 2px rgb(60 44 30 / 12%);
+
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 24px;
+  --r-pill: 999px;
+
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 24px;
+  --s-6: 32px;
+  --s-7: 48px;
+
+  --font-ui: 'PingFang SC', 'HarmonyOS Sans SC', 'Microsoft YaHei', 'Noto Sans SC', system-ui, sans-serif;
+  --font-display: 'LXGW WenKai', 'Songti SC', 'Noto Serif SC', 'STSong', serif;
+  --fs-xs: 12px;
+  --fs-sm: 13px;
+  --fs-md: 15px;
+  --fs-lg: 18px;
+  --fs-xl: 24px;
+  --fs-hero: clamp(40px, 6vw, 68px);
+
+  --ease-spring: linear(
+    0, 0.009, 0.035 2.1%, 0.141 4.4%, 0.723 12.9%, 0.938 16.7%, 1.017 19.8%, 1.061 23.2%, 1.07 25.5%,
+    1.064 28.4%, 1.023 36.3%, 1.004 42.4%, 0.994 50.6%, 1
+  );
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --t-fast: 140ms;
+  --t-med: 260ms;
+  --t-slow: 520ms;
+
+  --hit: 44px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--c-linen);
+  color: var(--c-charcoal);
+  font-family: var(--font-ui);
+  font-size: var(--fs-md);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+  overscroll-behavior: none;
+  overflow: hidden;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+.vignette {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    radial-gradient(130% 100% at 50% 42%, rgb(0 0 0 / 0%) 55%, rgb(70 50 34 / 14%) 100%),
+    linear-gradient(180deg, rgb(255 250 240 / 10%), rgb(0 0 0 / 0%) 30%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --ease-spring: var(--ease-out);
+  }
+}

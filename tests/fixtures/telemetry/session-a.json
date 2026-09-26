@@ -1,0 +1,18 @@
+[
+  { "e": "session_start", "t": 0, "sid": "a", "build": "x", "ua": "test", "dpr": 1, "quality": "auto", "w": 1280, "h": 800 },
+  { "e": "run_start", "t": 20000, "sid": "a", "commissionId": "T1", "attempt": 0, "day": 1, "runSeed": 1, "fieldRipe": 49, "fieldUnripe": 0 },
+  { "e": "first_input", "t": 26000, "sid": "a", "msSinceRunStart": 6000 },
+  { "e": "move", "t": 27000, "sid": "a", "i": 1, "harvested": 3, "ripe": 3, "unripe": 0, "sprout": 0, "depth": 1, "created": "", "previewMs": 800 },
+  { "e": "special_created", "t": 40000, "sid": "a", "kind": "sickleH", "moveIndex": 2, "msSinceFirstInput": 14000 },
+  { "e": "move", "t": 40000, "sid": "a", "i": 2, "harvested": 4, "ripe": 4, "unripe": 0, "sprout": 0, "depth": 1, "created": "sickleH", "previewMs": 100 },
+  { "e": "run_end", "t": 50000, "sid": "a", "commissionId": "T1", "result": "won", "movesLeft": 7, "stars": 0, "deliveredTotal": 10, "surplusTotal": 12, "dewdrops": 99, "durationMs": 30000 },
+  { "e": "care", "t": 60000, "sid": "a", "verb": "water", "target": "3", "day": 1, "phase": "morning", "prompted": true },
+  { "e": "run_start", "t": 70000, "sid": "a", "commissionId": "C01", "attempt": 0, "day": 1, "runSeed": 2, "fieldRipe": 20, "fieldUnripe": 10 },
+  { "e": "first_input", "t": 72000, "sid": "a", "msSinceRunStart": 2000 },
+  { "e": "special_created", "t": 170000, "sid": "a", "kind": "dewOrb", "moveIndex": 5, "msSinceFirstInput": 98000 },
+  { "e": "undo", "t": 171000, "sid": "a", "moveIndex": 5 },
+  { "e": "run_end", "t": 200000, "sid": "a", "commissionId": "C01", "result": "lost", "movesLeft": 0, "stars": 0, "deliveredTotal": 6, "surplusTotal": 2, "dewdrops": 20, "durationMs": 130000 },
+  { "e": "sleep", "t": 210000, "sid": "a", "day": 1, "careUnused": 2 },
+  { "e": "care", "t": 220000, "sid": "a", "verb": "water", "target": "1", "day": 2, "phase": "morning", "prompted": false },
+  { "e": "run_start", "t": 230000, "sid": "a", "commissionId": "C02", "attempt": 0, "day": 2, "runSeed": 3, "fieldRipe": 20, "fieldUnripe": 10 }
+]

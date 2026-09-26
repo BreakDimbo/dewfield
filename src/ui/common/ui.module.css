@@ -1,0 +1,137 @@
+.glass {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--glass-border);
+  box-shadow:
+    var(--shadow-1),
+    inset 0 1px 0 color-mix(in srgb, var(--c-white) 70%, transparent);
+  border-radius: var(--r-lg);
+}
+
+.btn {
+  appearance: none;
+  border: 0;
+  cursor: pointer;
+  min-height: var(--hit);
+  min-width: var(--hit);
+  padding: 0 var(--s-5);
+  border-radius: var(--r-pill);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-2);
+  transition:
+    transform var(--t-med) var(--ease-spring),
+    box-shadow var(--t-med) var(--ease-out),
+    background-color var(--t-fast) var(--ease-out),
+    opacity var(--t-fast) linear;
+  -webkit-tap-highlight-color: transparent;
+}
+.btn:hover {
+  transform: translateY(-1px);
+}
+.btn:active {
+  transform: scale(0.95);
+  transition-duration: 80ms;
+}
+.btn:focus-visible {
+  outline: 2px solid var(--c-mist);
+  outline-offset: 3px;
+}
+.btn:disabled {
+  opacity: 0.42;
+  cursor: default;
+  transform: none;
+}
+
+.primary {
+  composes: btn;
+  background: var(--c-sage);
+  color: var(--c-linen);
+  box-shadow:
+    0 1px 0 color-mix(in srgb, var(--c-white) 25%, transparent) inset,
+    0 6px 18px color-mix(in srgb, var(--c-sage-deep) 30%, transparent);
+}
+.primary:hover {
+  background: var(--c-sage-deep);
+}
+
+.secondary {
+  composes: btn;
+  background: color-mix(in srgb, var(--c-white) 62%, transparent);
+  color: var(--c-charcoal);
+  box-shadow:
+    0 0 0 1px var(--glass-edge) inset,
+    var(--shadow-1);
+}
+.secondary:hover {
+  background: color-mix(in srgb, var(--c-white) 86%, transparent);
+}
+
+.icon {
+  composes: btn;
+  padding: 0;
+  width: var(--hit);
+  background: color-mix(in srgb, var(--c-white) 58%, transparent);
+  color: var(--c-charcoal);
+  box-shadow:
+    0 0 0 1px var(--glass-edge) inset,
+    var(--shadow-1);
+}
+
+.display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+}
+
+.num {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum';
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--s-5);
+  z-index: 20;
+}
+
+.scrim {
+  position: fixed;
+  inset: 0;
+  background: radial-gradient(ellipse at center, color-mix(in srgb, var(--c-linen) 10%, transparent), color-mix(in srgb, var(--c-umber) 22%, transparent));
+  animation: fadeIn var(--t-slow) var(--ease-out) both;
+}
+
+.card {
+  composes: glass;
+  position: relative;
+  width: min(420px, 100%);
+  padding: var(--s-6) var(--s-6) var(--s-5);
+  animation: rise 560ms var(--ease-spring) both;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(18px) scale(0.97);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .card,
+  .scrim {
+    animation-duration: 1ms;
+  }
+}
