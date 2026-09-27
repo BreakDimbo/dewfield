@@ -12,8 +12,11 @@ import { useRunStore } from '@/state/runStore';
 import { useUiStore } from '@/state/uiStore';
 import { gameController } from './gameController';
 import { runController } from './runController';
+import { dismissTip } from './tips';
 
 const flush = () => new Promise((r) => setTimeout(r, 0));
+/** Tips shown after the last safe-point write of a run that was then reloaded (see refreshMidMatch). */
+let lostTips: string[] = [];
 
 beforeEach(() => {
   persistence.use(new MemoryAdapter(), 'test');
@@ -21,6 +24,7 @@ beforeEach(() => {
   useRunStore.setState({ run: null, phase: 'ended', paused: false, selected: null, preview: null, guide: null });
   useUiStore.setState({ tips: [], careMode: 'none', guideRow: null, panel: 'none', briefReadOnly: false });
   telemetry.reset();
+  lostTips = [];
   bus.clear();
   bus.on('boardEvents', (p) => {
     if (p.kind === 'move' || p.kind === 'reject') queueMicrotask(() => runController.timelineDone());
@@ -56,6 +60,9 @@ async function refreshMidMatch(): Promise<void> {
   await flush();
   expect(useAppStore.getState().app).toBe('match');
   const before = gate();
+  const log = telemetry.all();
+  const since = log.map((e) => e.e).lastIndexOf('run_start');
+  for (const e of log.slice(since)) if (e.e === 'tip_shown') lostTips.push(e.tip);
   useRunStore.setState({ run: null, phase: 'ended', selected: null, preview: null, guide: null });
   useAppStore.setState({ app: 'title', home: null, settlement: null });
   expect(gameController.continueGame()).toBe(true);
@@ -146,6 +153,8 @@ describe('day 1 flow and gates (P1-27, 02 §11.1)', () => {
     expect(useAppStore.getState().home!.phase).toBe('dusk');
     expect(allow()).toEqual(['shop', 'sleep', 'water', 'bee']);
     expect(tipIds()).toContain('shop');
+    while (useUiStore.getState().tips.length) dismissTip();
+    expect(tipIds()).toContain('sleep');
     refreshKeepsGate();
     expect(gameController.purchase('windChime')).toBe(true);
     gameController.sleep();
@@ -157,6 +166,17 @@ describe('day 1 flow and gates (P1-27, 02 §11.1)', () => {
     expect(useAppStore.getState().home!.day).toBe(2);
     expect(useAppStore.getState().home!.commissions.active?.id).toBe('C02');
     expect(tipIds()).toContain('morning');
+
+    // P2-15 #1: the telemetry trail has every gate, in order. Each tip is logged once, except that a tip first
+    // shown mid-run is re-shown once after a mid-run reload: seenTips ride on the next safe-point write (02 §11.5).
+    const log = telemetry.all();
+    expect(log.filter((e) => e.e === 'tutorial_step').map((e) => e.step)).toEqual(['G0', 'G1', 'G2', 'G3', 'G4', 'G5', 'done']);
+    const tips = log.flatMap((e) => (e.e === 'tip_shown' ? [e.tip] : []));
+    const repeated = tips.filter((t, i) => tips.indexOf(t) !== i);
+    expect(new Set(repeated).size).toBe(repeated.length);
+    for (const t of repeated) expect(lostTips).toContain(t);
+    expect(tips).toEqual(expect.arrayContaining(['fieldMemory', 'onlyRipe', 'preview', 'care', 'shop', 'sleep', 'morning']));
+    expect([...tipIds()].sort()).toEqual([...new Set(tips)].sort());
   });
 
   it('T2 abandoned twice auto-completes; C01 failed twice unlocks sleep with the first-fail tip', async () => {
@@ -185,6 +205,8 @@ describe('day 1 flow and gates (P1-27, 02 §11.1)', () => {
     await flush();
     expect(gate()).toBe('done');
     expect(useAppStore.getState().home!.commissions.active?.id).toBe('C01');
+    // Four failed runs came back to the hub; firstFail was shown on the first only.
+    expect(telemetry.all().filter((e) => e.e === 'tip_shown' && e.tip === 'firstFail')).toHaveLength(1);
   });
 
   it('care telemetry: guided watering is prompted, free watering is not (P1-24 #3)', async () => {
