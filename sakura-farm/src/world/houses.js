@@ -274,8 +274,7 @@ export async function build(ctx) {
   doRow(n1w, { lod: 1, pri: 1, gardenSpot: (d, i) => i === 2 || i === 5, trad: (d, i) => i === 4 });
   const n1e = rowS('N1E', -7.4, 85, -57.9, 10.9);
   doRow(n1e, { lod: 2, pri: 2, gardenSpot: (d, i) => i === 1 || i === 4 || i === 7, trad: (d, i) => i === 3, after: (d, i, res) => { if (i === 5) { const p = res.houseRect; H.laundry.koinobori(d.F, p.hx1 + 0.6 < d.w / 2 - 0.3 ? p.hx1 + 0.6 : p.hx0 - 0.6, 0, -1.8, 7.0); } } });
-  const n2w = rowS('N2W', -85, -15.7, -72.7, 10.8);
-  doRow(n2w, { lod: 1, pri: 1, gardenSpot: (d, i) => i === 3, trad: (d, i) => i === 1 || i === 5, back: true, per: () => ({ backStyle: 'block', backH: 1.1 }) });
+  // N2W is the farm (layout FARM / farm module) in sakura-farm — no houses there.
   const n2e = rowS('N2E', -8.5, 85, -72.7, 10.8);
   doRow(n2e, { lod: 1, pri: 1, gardenSpot: (d, i) => i === 2 || i === 6, trad: (d, i) => i === 4 || i === 8, per: () => ({ backStyle: 'block', backH: 1.1 }) });
 

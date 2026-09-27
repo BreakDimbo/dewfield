@@ -10,8 +10,8 @@ import { batchStatic as batchStatic2 } from './core/batch2.js';
 import { createAudio } from './core/audio.js';
 
 export const MODULES = [
-  'environment', 'street', 'poles', 'railway', 'station', 'plaza', 'shopsA', 'shopsB', 'houses',
-  'sakura', 'trains', 'crossing', 'props', 'vehicles', 'characters', 'petals',
+  'environment', 'street', 'poles', 'railway', 'station', 'plaza', 'shopsA', 'shopsB', 'houses', 'farm',
+  'sakura', 'trees', 'trains', 'crossing', 'props', 'vehicles', 'characters', 'petals',
 ];
 
 const params = new URLSearchParams(location.search);
@@ -80,6 +80,7 @@ const LABELS = {
   environment: '地形と河川敷', street: '商店街の道', poles: '電柱と電線', railway: '線路と架線', station: '駅舎とホーム', plaza: '駅前広場',
   shopsA: 'コンビニ・喫茶・花屋・書店', shopsB: '和菓子・よろず屋・ラーメン・自転車店', houses: '住宅街', sakura: '桜並木', trains: '電車',
   crossing: '踏切', props: '自販機と小物', vehicles: '自転車と車', characters: '町の人々', petals: '花びら',
+  farm: 'ふれあい農園', trees: '畑の木',
 };
 
 async function build() {

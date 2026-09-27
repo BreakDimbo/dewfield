@@ -207,7 +207,7 @@ export const BLOCKS = [
   { id: 'SEB', x0: 19.5, x1: 62, z0: 2.6, z1: 128, front: ['S', 'W'], note: 'behind east main-street lots (x > streetCenterX(z)+19)' },
   { id: 'N1W', x0: -85, x1: -15.5, z0: -69.3, z1: -57.9, front: ['S'], note: 'north residential row 1 (faces R4)' },
   { id: 'N1E', x0: -8.5, x1: 85, z0: -69.3, z1: -57.9, front: ['S'], note: 'north residential row 1 (faces R4). Keep (-8.7,-58.5) free for vending machine V4' },
-  { id: 'N2W', x0: -85, x1: -15.5, z0: -83.5, z1: -72.7, front: ['S'], note: 'north residential row 2 (faces R6 alley)' },
+  { id: 'N2W', x0: -85, x1: -15.5, z0: -83.5, z1: -72.7, front: ['S'], owner: 'farm', note: 'SAKURA-FARM: 桜ヶ丘ふれあい農園 (farm module) — no houses here' },
   { id: 'N2E', x0: -8.5, x1: 85, z0: -83.5, z1: -72.7, front: ['S'], note: 'north residential row 2 (faces R6 alley)' },
 ];
 // Far town fill (houses module, low detail boxes+roofs only): rings outside the playable area.
@@ -310,8 +310,27 @@ export const SPOTS = {
 SPOTS.bikeShopBikes = [-3.2, -2.4, -1.6].map(lx => { const p = lotToWorld(lotById('W6'), lx, -1.0); return { x: p.x, z: p.z, rotY: lotFrame(lotById('W6')).rotY }; });
 SPOTS.shrineSakura = lotToWorld(lotById('E6'), -2.5, -6.5);
 
+// ---------------------------------------------------------------- 桜ヶ丘ふれあい農園 (sakura-farm, docs/DESIGN.md §7)
+// The old N2W residential row between alley R6 and the levee. farm builds the ground, beds, fences, shed, stall;
+// trees grows the plot trees. Plot i: centre (plots[i].x, z), square of `plot` m, soil top at soilY.
+export const FARM = (() => {
+  const plot = 5.5, gap = 1.5, n = 8, z = -79.4;
+  const x0 = -82.5;
+  const plots = Array.from({ length: n }, (_, i) => ({ i, x: x0 + plot / 2 + i * (plot + gap), z }));
+  return {
+    x0: -85, x1: -15.5, z0: -83.5, z1: -72.7,
+    plot, gap, z, soilY: 0.16, bedH: 0.2, plots,
+    path: { z0: -76.2, z1: -73.3 },                                      // gravel walk in front of the beds
+    shed: { x: -20.8, z: -79.6, w: 5.2, d: 4.2, rotY: 0 },               // 農具小屋 — door faces south
+    stall: { x: -25.6, z: -74.9, w: 2.6, d: 1.2, rotY: 0 },              // 種の屋台 — counter faces south
+    gate: { x: -17.6, z: -73.0 },                                         // entrance sign by R2 / R6 corner
+    spawn: { x: -19.5, z: -71.4, yaw: 105, pitch: -4 },                   // start: in the alley, looking west over the farm
+  };
+})();
+
 // Named areas for the HUD location toast (first match wins).
 export const AREAS = [
+  { name: '桜ヶ丘ふれあい農園', x0: -85, x1: -15.5, z0: -84, z1: -72.6 },
   { name: '桜ヶ丘駅 1番線ホーム', x0: -7, x1: 46, z0: -40, z1: -35.5 },
   { name: '桜ヶ丘駅 2番線ホーム', x0: -7, x1: 46, z0: -51, z1: -46 },
   { name: '桜ヶ丘駅', x0: -4, x1: 12, z0: -35.5, z1: -25 },
