@@ -20,7 +20,7 @@
   grid-row: 2;
   display: grid;
   gap: 6px;
-  animation: in 900ms var(--ease-out) both;
+  animation: in calc(900ms * var(--motion)) var(--ease-out) both;
 }
 .mark {
   display: inline-flex;
@@ -60,7 +60,7 @@
 }
 .intro p {
   margin: 0;
-  animation: in 800ms var(--ease-out) both;
+  animation: in calc(800ms * var(--motion)) var(--ease-out) both;
 }
 .actions {
   position: relative;
@@ -68,7 +68,7 @@
   align-self: start;
   margin-top: var(--s-6);
   pointer-events: auto;
-  animation: in 900ms var(--ease-out) 1300ms both;
+  animation: in calc(900ms * var(--motion)) var(--ease-out) calc(1300ms * var(--motion)) both;
 }
 .actions {
   display: flex;

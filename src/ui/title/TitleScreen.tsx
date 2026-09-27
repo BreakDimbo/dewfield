@@ -30,7 +30,7 @@ export function TitleScreen({
       </header>
       <div className={css.intro}>
         {S.intro.map((line, i) => (
-          <p key={line} style={{ animationDelay: `${420 + i * 260}ms` }}>
+          <p key={line} style={{ animationDelay: `calc(${420 + i * 260}ms * var(--motion))` }}>
             {line}
           </p>
         ))}

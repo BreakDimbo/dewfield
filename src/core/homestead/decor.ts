@@ -64,6 +64,13 @@ export function purchaseDecor(
 
 export type BeeReject = 'locked' | 'noPoints' | 'beeUsed' | 'badTarget';
 
+/** 02 §8: bees only land on a plain (non-special) crop tile. Also drives the hover telegraph. */
+export function isBeeTarget(home: HomesteadState, pos: Pos): boolean {
+  if (pos.x < 0 || pos.x > 6 || pos.y < 0 || pos.y > 6) return false;
+  const t = fieldBoard(home).cells[idx(pos)];
+  return isCrop(t) && t.special === null;
+}
+
 /** 02 §8 release bees: one plain crop tile becomes a bee tile (new uid). */
 export function carePlaceBee(
   home: HomesteadState,
@@ -73,11 +80,10 @@ export function carePlaceBee(
   if (!effectiveModifiers(home).careVerbs.includes('bee')) return { ok: false, reason: 'locked' };
   if (home.care.pointsLeft <= 0) return { ok: false, reason: 'noPoints' };
   if (home.care.beeUsed || cfg.care.beePerDay <= 0) return { ok: false, reason: 'beeUsed' };
-  if (pos.x < 0 || pos.x > 6 || pos.y < 0 || pos.y > 6) return { ok: false, reason: 'badTarget' };
+  if (!isBeeTarget(home, pos)) return { ok: false, reason: 'badTarget' };
   const board = fieldBoard(home);
   const i = idx(pos);
   const t = board.cells[i]!;
-  if (!isCrop(t) || t.special !== null) return { ok: false, reason: 'badTarget' };
   const cells: Tile[] = board.cells.slice();
   const uid = home.uidCounter;
   cells[i] = { uid, kind: 'bee' };

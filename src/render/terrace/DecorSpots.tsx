@@ -23,7 +23,7 @@ import type { DecorId } from '@/core/homestead/state';
 import { terraceLevel } from '@/core/homestead/decor';
 import { merge, part } from '@/render/assets/greybox';
 import { PAL } from '@/render/assets/palette';
-import { springOut } from '@/render/choreo/easing';
+import { easeOutCubic, springOut } from '@/render/choreo/easing';
 import { useAppStore } from '@/state/appStore';
 import { gameCfg } from '@/state/config';
 
@@ -190,6 +190,9 @@ export function DecorSpots() {
   useFrame((state) => {
     const t = state.clock.elapsedTime;
     const set = new Set(owned ?? []);
+    // RD-8: no spring overshoot and 1.5× faster under reduced motion
+    const rm = useAppStore.getState().settings.reducedMotion;
+    const speed = rm ? gameCfg().anim.reducedMotionScale : 1;
     for (const id of Object.keys(meshes) as DecorId[]) {
       const m = meshes[id];
       const has = set.has(id);
@@ -197,8 +200,8 @@ export function DecorSpots() {
       if (!has) delete born.current[id];
       m.visible = has;
       if (!has) continue;
-      const k = Math.min(1, (t - born.current[id]!) / 0.7);
-      const s = springOut(k);
+      const k = Math.min(1, ((t - born.current[id]!) * speed) / 0.7);
+      const s = rm ? easeOutCubic(k) : springOut(k);
       m.scale.setScalar(Math.max(0.001, s));
       if (id === 'windChime') m.rotation.z = 0.06 * Math.sin(t * 1.4);
       if (id === 'glassMobile') m.rotation.y = t * 0.25;

@@ -70,7 +70,7 @@ pnpm serve          # 用生产缓存策略本地托管 dist/：http://localhost
 VITE_BASE=/dewfield/ pnpm build   # 部署到子路径
 ```
 
-- 带哈希的 `/assets/*` 与 `/fonts/*`：`Cache-Control: public, max-age=31536000, immutable`；`index.html`：`no-cache`。已附 `public/_headers`（Netlify / Cloudflare Pages）与 `vercel.json`。
+- 带哈希的 `/assets/*`（含展示字体子集，源文件 `src/ui/fonts/`，由 `pnpm assets:font` 生成）：`Cache-Control: public, max-age=31536000, immutable`；`index.html`：`no-cache`。已附 `public/_headers`（Netlify / Cloudflare Pages）与 `vercel.json`。
 - 标题页右下角与存档的 `build` 字段都是 `git 短 SHA + 日期`。
 
 ## 工具

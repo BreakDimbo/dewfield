@@ -89,7 +89,9 @@ export function LightingRig() {
   useFrame((_, dt) => {
     target.current = presetFor();
     const goal = PRESETS[target.current];
-    const k = 1 - Math.exp((-dt * 1000 * 3) / gameCfg().anim.nightFade);
+    const anim = gameCfg().anim;
+    const rmScale = useAppStore.getState().settings.reducedMotion ? anim.reducedMotionScale : 1;
+    const k = 1 - Math.exp((-dt * 1000 * 3 * rmScale) / anim.nightFade);
     const c = cur.current;
     for (const key of ['sky', 'ground', 'sun', 'fog', 'domeTop', 'domeHorizon', 'domeGlow'] as const) c[key].lerp(goal[key], k);
     c.hemi += (goal.hemi - c.hemi) * k;

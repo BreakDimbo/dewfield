@@ -36,7 +36,7 @@
 }
 .btn:active {
   transform: scale(0.95);
-  transition-duration: 80ms;
+  transition-duration: calc(80ms * var(--motion));
 }
 .btn:focus-visible {
   outline: 2px solid var(--c-mist);
@@ -115,7 +115,7 @@
   position: relative;
   width: min(420px, 100%);
   padding: var(--s-6) var(--s-6) var(--s-5);
-  animation: rise 560ms var(--ease-spring) both;
+  animation: rise calc(560ms * var(--motion)) var(--ease-spring) both;
 }
 
 @keyframes fadeIn {
@@ -128,6 +128,10 @@
     opacity: 0;
     transform: translateY(18px) scale(0.97);
   }
+}
+:root[data-rm='1'] .card,
+:root[data-rm='1'] .scrim {
+  animation-duration: 1ms;
 }
 @media (prefers-reduced-motion: reduce) {
   .card,

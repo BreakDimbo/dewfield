@@ -3,7 +3,7 @@
   inset: 0;
   pointer-events: none;
   z-index: 10;
-  animation: hubIn 700ms var(--ease-out) both;
+  animation: hubIn calc(700ms * var(--motion)) var(--ease-out) both;
 }
 .hud button {
   pointer-events: auto;
@@ -75,6 +75,12 @@
   flex-shrink: 0;
   padding: 0 16px;
 }
+.lockNote {
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--c-ink-2);
+}
 .confirm {
   position: absolute;
   bottom: calc(max(18px, env(safe-area-inset-bottom)) + 72px);
@@ -89,7 +95,7 @@
   color: var(--c-ink-2);
   white-space: nowrap;
   pointer-events: auto;
-  animation: confirmIn 320ms var(--ease-spring) both;
+  animation: confirmIn calc(320ms * var(--motion)) var(--ease-spring) both;
 }
 .careHint {
   display: flex;
@@ -124,7 +130,7 @@
   border-radius: var(--r-md);
   font-size: var(--fs-sm);
   white-space: nowrap;
-  animation: tipIn 260ms var(--ease-spring) both;
+  animation: tipIn calc(260ms * var(--motion)) var(--ease-spring) both;
 }
 .brief {
   text-align: left;

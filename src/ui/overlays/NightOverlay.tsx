@@ -3,6 +3,7 @@ import { useAppStore } from '@/state/appStore';
 import { gameCfg } from '@/state/config';
 import { gameController } from '@/state/controllers/gameController';
 import { useUiStore } from '@/state/uiStore';
+import { motionScale } from '@/ui/common/motion';
 import { S } from '@/ui/strings/zh-CN';
 import css from './overlays.module.css';
 
@@ -12,7 +13,7 @@ export function NightOverlay() {
   const day = useAppStore((s) => s.home?.day ?? 1);
   useEffect(() => {
     if (phase !== 'dark') return;
-    const t = setTimeout(() => gameController.revealMorning(), gameCfg().anim.nightFade + 700);
+    const t = setTimeout(() => gameController.revealMorning(), (gameCfg().anim.nightFade + 700) / motionScale());
     return () => clearTimeout(t);
   }, [phase]);
   return (
