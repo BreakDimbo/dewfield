@@ -98,6 +98,8 @@ export function HubHud() {
             onPointerDown={() => gameController.setTomorrow(true)}
             onPointerUp={() => gameController.setTomorrow(false)}
             onPointerLeave={() => gameController.setTomorrow(false)}
+            onPointerCancel={() => gameController.setTomorrow(false)}
+            onContextMenu={(e) => e.preventDefault()}
           >
             <MoonIcon />
           </button>
