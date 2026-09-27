@@ -1,0 +1,121 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`core/config tunables (02 §14) > defaults match the 02 §14 table 1`] = `
+{
+  "anim": {
+    "beeFlight": 600,
+    "cameraTransition": 1200,
+    "cascadeGap": 70,
+    "chainDelay": 90,
+    "dewBurst": 380,
+    "fallColumnStagger": 15,
+    "fallPerCell": 55,
+    "fastForwardScale": 3,
+    "grow": 160,
+    "growStagger": 20,
+    "harvestPop": 180,
+    "hudCrossfade": 300,
+    "matchFlash": 80,
+    "morningReveal": 2500,
+    "nightFade": 1500,
+    "reducedMotionScale": 1.5,
+    "rushConvertStagger": 80,
+    "rushTimeScale": 1.5,
+    "sickleSweep": 320,
+    "spawnPop": 160,
+    "specialTelegraph": 120,
+    "swap": 140,
+    "swapRejected": 180,
+    "undoRewind": 300,
+    "yieldFly": 400,
+  },
+  "audio": {
+    "cascadeMaxSteps": 8,
+  },
+  "board": {
+    "height": 7,
+    "minValidMoves": 3,
+    "shuffleMaxAttempts": 50,
+    "width": 7,
+  },
+  "care": {
+    "beePerDay": 1,
+    "pointsBase": 5,
+    "waterOncePerRowPerDay": true,
+  },
+  "commission": {
+    "maxItems": 2,
+    "movesByTier": {
+      "1": 24,
+      "2": 22,
+      "3": 20,
+    },
+  },
+  "economy": {
+    "baseReward": {
+      "1": 40,
+      "2": 50,
+      "3": 60,
+    },
+    "starBonus": 10,
+    "surplusPrice": 2,
+    "tutorialMoveBonus": 5,
+    "unripeDewdrop": 1,
+  },
+  "growth": {
+    "createdSpecialStage": 2,
+    "maxPerStep": 1,
+    "neighborRipen": "all",
+  },
+  "hint": {
+    "idleMs": 8000,
+  },
+  "input": {
+    "dragThresholdCell": 0.35,
+    "dragThresholdPx": 12,
+  },
+  "overnight": {
+    "growth": 1,
+  },
+  "render": {
+    "dprMax": 2,
+    "particlesMax": 300,
+  },
+  "rush": {
+    "maxConversions": 12,
+    "maxIterations": 30,
+  },
+  "spawn": {
+    "orderBias": 0.1,
+    "stageWeights": [
+      0.7,
+      0.3,
+      0,
+    ],
+  },
+  "special": {
+    "beeEnabled": true,
+    "dewOrbRadius": 1,
+    "dewOrbRingRadius": 2,
+    "sickleOrientation": "parallel",
+  },
+  "stars": {
+    "thresholds": [
+      0.2,
+      0.4,
+    ],
+  },
+  "terrace": {
+    "levelThresholds": [
+      3,
+      6,
+    ],
+  },
+  "tutorial": {
+    "autoCompleteAfterFails": 2,
+  },
+  "undo": {
+    "perRun": 1,
+  },
+}
+`;

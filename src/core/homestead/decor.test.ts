@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { findGroups } from '@/core/board/match';
-import { DECOR } from '@/core/config/decor';
+import { DECOR, DECOR_BY_ID } from '@/core/config/decor';
 import { DEFAULT_TUNABLES } from '@/core/config/tunables';
 import { carePlaceBee, carePointsMax, effectiveModifiers, purchaseDecor, terraceLevel } from './decor';
 import { fieldBoard, newHomestead, sleep, startRun } from './homestead';
@@ -11,14 +11,16 @@ const rich = (h: HomesteadState, n = 9999) => ({ ...h, wallet: { dewdrop: n } })
 
 describe('decor, shop, modifiers, terrace level (P2-06)', () => {
   it('rejects locked, owned and unaffordable; buying deducts and owns', () => {
-    const h = rich(newHomestead(1, cfg), 210);
+    const chime = DECOR_BY_ID.windChime.price;
+    expect(DECOR_BY_ID.beehive.price).toBeGreaterThan(chime + 10);
+    const h = rich(newHomestead(1, cfg), chime + 10);
     expect(purchaseDecor(h, 'bench', cfg)).toEqual({ ok: false, reason: 'locked' });
     expect(purchaseDecor(h, 'beehive', cfg)).toEqual({ ok: false, reason: 'poor' });
     const r = purchaseDecor(h, 'windChime', cfg);
     if (!r.ok) throw new Error(r.reason);
     expect(r.home.wallet.dewdrop).toBe(10);
     expect(r.home.decor.owned).toEqual(['windChime']);
-    expect(r.events).toEqual([{ t: 'decorPurchased', id: 'windChime', price: 200 }]);
+    expect(r.events).toEqual([{ t: 'decorPurchased', id: 'windChime', price: chime }]);
     expect(purchaseDecor(rich(r.home), 'windChime', cfg)).toEqual({ ok: false, reason: 'owned' });
   });
 
@@ -39,12 +41,12 @@ describe('decor, shop, modifiers, terrace level (P2-06)', () => {
   it('sums the four passive effects and applies them', () => {
     const h = { ...newHomestead(1, cfg), decor: { owned: ['windChime', 'beehive', 'irrigation', 'dewLanterns'] as HomesteadState['decor']['owned'] } };
     expect(effectiveModifiers(h)).toEqual({ extraMoves: 1, carePointsMax: 1, rushBonus: 2, careVerbs: ['water', 'bee'] });
-    expect(carePointsMax(h, cfg)).toBe(4);
+    expect(carePointsMax(h, cfg)).toBe(cfg.care.pointsBase + 1);
     const run = startRun(h, cfg).run;
     expect(run.movesTotal).toBe(11);
     expect(run.modifiers).toEqual({ extraMoves: 1, rushBonus: 2 });
     const night = sleep({ ...h, tutorial: { ...h.tutorial, done: true } }, cfg);
-    expect(night.ok && night.home.care.pointsLeft).toBe(4);
+    expect(night.ok && night.home.care.pointsLeft).toBe(cfg.care.pointsBase + 1);
   });
 });
 
@@ -65,7 +67,7 @@ describe('release bees (P2-07)', () => {
     if (!r.ok) throw new Error(r.reason);
     expect(r.events).toEqual([{ t: 'beePlaced', pos: { x: 3, y: 3 }, uid: 50, replacedUid: h.field.uids[24] }]);
     expect(r.home.uidCounter).toBe(51);
-    expect(r.home.care).toMatchObject({ pointsLeft: 2, beeUsed: true });
+    expect(r.home.care).toMatchObject({ pointsLeft: cfg.care.pointsBase - 1, beeUsed: true });
     expect(findGroups(fieldBoard(r.home).cells)).toEqual([]);
     expect(startRun(r.home, cfg).run.board.cells[24]).toEqual({ uid: 50, kind: 'bee' });
   });

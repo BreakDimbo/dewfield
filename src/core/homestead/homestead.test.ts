@@ -133,7 +133,7 @@ describe('care, sleep, commissions (P1-11, P1-12, P2-05)', () => {
     const sprouty = { ...h, field: { ...h.field, rows: h.field.rows.map((r) => r.replace(/2/g, '0')) } };
     const r = careWaterRow(sprouty, 3, cfg);
     if (!r.ok) throw new Error(r.reason);
-    expect(r.home.care).toEqual({ pointsLeft: 2, wateredRows: [3], beeUsed: false });
+    expect(r.home.care).toEqual({ pointsLeft: cfg.care.pointsBase - 1, wateredRows: [3], beeUsed: false });
     expect(r.events[0]).toMatchObject({ t: 'grow', cause: 'water' });
     expect(fieldBoard(r.home).cells.slice(21, 28).every((t) => t.kind === 'crop' && t.stage === 1)).toBe(true);
     expect(careWaterRow(r.home, 3, cfg)).toEqual({ ok: false, reason: 'rowWatered' });
@@ -148,7 +148,7 @@ describe('care, sleep, commissions (P1-11, P1-12, P2-05)', () => {
     const young = { ...h, phase: 'dusk' as const, care: { pointsLeft: 0, wateredRows: [1], beeUsed: true }, field: { ...h.field, rows: h.field.rows.map((r) => r.replace(/2/g, '0')) } };
     const s = sleep({ ...young, tutorial: { ...young.tutorial, done: true }, commissions: { ...young.commissions, active: null } }, cfg);
     if (!s.ok) throw new Error('gate');
-    expect(s.home).toMatchObject({ day: 2, phase: 'morning', care: { pointsLeft: 3, wateredRows: [], beeUsed: false } });
+    expect(s.home).toMatchObject({ day: 2, phase: 'morning', care: { pointsLeft: cfg.care.pointsBase, wateredRows: [], beeUsed: false } });
     expect(s.events[0]).toMatchObject({ t: 'grow', cause: 'overnight' });
     expect(s.home.commissions.active?.id).toBe('T2');
     expect(sleep(h, cfg)).toEqual({ ok: false, reason: 'gate' });

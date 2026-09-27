@@ -1,0 +1,227 @@
+{
+  "profile": "VS",
+  "runs": 300,
+  "seed": 1,
+  "bot": "greedy",
+  "set": "care.pointsBase=3;spawn.orderBias=0.25",
+  "rows": [
+    {
+      "id": "T2",
+      "tier": 1,
+      "moves": 14,
+      "items": [
+        {
+          "crop": "tomato",
+          "count": 8
+        }
+      ],
+      "none": {
+        "runs": 300,
+        "moves": 2627,
+        "avgValidMoves": 11.679101636848115,
+        "lowValidShare": 0.0015226494099733537,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.5972592310620479,
+        "specialWithin10": 0.9933333333333333,
+        "avgDepth": 1.7202131709173962,
+        "deepShare": 0.18500190331176247,
+        "winRate": 0.93
+      },
+      "care": {
+        "runs": 300,
+        "moves": 2288,
+        "avgValidMoves": 11.586538461538462,
+        "lowValidShare": 0.0021853146853146855,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.5598776223776224,
+        "specialWithin10": 0.9766666666666667,
+        "avgDepth": 1.7093531468531469,
+        "deepShare": 0.18312937062937062,
+        "winRate": 0.9633333333333334
+      }
+    },
+    {
+      "id": "C01",
+      "tier": 1,
+      "moves": 24,
+      "items": [
+        {
+          "crop": "carrot",
+          "count": 10
+        }
+      ],
+      "none": {
+        "runs": 300,
+        "moves": 3404,
+        "avgValidMoves": 11.4406580493537,
+        "lowValidShare": 0.0017626321974148062,
+        "shufflesPer25": 0.007344300822561692,
+        "specialsPerMove": 0.5769682726204466,
+        "specialWithin10": 1,
+        "avgDepth": 1.7212103407755581,
+        "deepShare": 0.17949471210340776,
+        "winRate": 0.9966666666666667
+      },
+      "care": {
+        "runs": 300,
+        "moves": 3004,
+        "avgValidMoves": 11.584886817576564,
+        "lowValidShare": 0.0013315579227696406,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.5679094540612517,
+        "specialWithin10": 1,
+        "avgDepth": 1.7127163781624501,
+        "deepShare": 0.177762982689747,
+        "winRate": 0.9966666666666667
+      }
+    },
+    {
+      "id": "C02",
+      "tier": 1,
+      "moves": 24,
+      "items": [
+        {
+          "crop": "blueberry",
+          "count": 12
+        }
+      ],
+      "none": {
+        "runs": 300,
+        "moves": 3929,
+        "avgValidMoves": 11.314583863578518,
+        "lowValidShare": 0.004326800712649529,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.5540850089081191,
+        "specialWithin10": 0.99,
+        "avgDepth": 1.7083227284296258,
+        "deepShare": 0.17434461695087808,
+        "winRate": 0.9833333333333333
+      },
+      "care": {
+        "runs": 300,
+        "moves": 3562,
+        "avgValidMoves": 11.5550252667041,
+        "lowValidShare": 0.0016844469399213925,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.5294778214486243,
+        "specialWithin10": 0.9966666666666667,
+        "avgDepth": 1.6768669286917461,
+        "deepShare": 0.1639528354856822,
+        "winRate": 0.9933333333333333
+      }
+    },
+    {
+      "id": "C03",
+      "tier": 1,
+      "moves": 24,
+      "items": [
+        {
+          "crop": "tomato",
+          "count": 8
+        },
+        {
+          "crop": "carrot",
+          "count": 6
+        }
+      ],
+      "none": {
+        "runs": 300,
+        "moves": 2830,
+        "avgValidMoves": 11.667491166077738,
+        "lowValidShare": 0.0021201413427561835,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.5830388692579506,
+        "specialWithin10": 1,
+        "avgDepth": 1.7399293286219082,
+        "deepShare": 0.18303886925795054,
+        "winRate": 1
+      },
+      "care": {
+        "runs": 300,
+        "moves": 2552,
+        "avgValidMoves": 11.746473354231975,
+        "lowValidShare": 0.001959247648902821,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.5760188087774295,
+        "specialWithin10": 1,
+        "avgDepth": 1.7429467084639498,
+        "deepShare": 0.1775078369905956,
+        "winRate": 1
+      }
+    },
+    {
+      "id": "C04",
+      "tier": 2,
+      "moves": 22,
+      "items": [
+        {
+          "crop": "corn",
+          "count": 18
+        }
+      ],
+      "none": {
+        "runs": 300,
+        "moves": 5481,
+        "avgValidMoves": 11.430213464696223,
+        "lowValidShare": 0.0029191753329684362,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.5469804780149607,
+        "specialWithin10": 0.9966666666666667,
+        "avgDepth": 1.6856413063309614,
+        "deepShare": 0.1685823754789272,
+        "winRate": 0.7466666666666667
+      },
+      "care": {
+        "runs": 300,
+        "moves": 5056,
+        "avgValidMoves": 11.459058544303797,
+        "lowValidShare": 0.00435126582278481,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.5375791139240507,
+        "specialWithin10": 0.9866666666666667,
+        "avgDepth": 1.6693037974683544,
+        "deepShare": 0.16811708860759494,
+        "winRate": 0.8066666666666666
+      }
+    },
+    {
+      "id": "C05",
+      "tier": 2,
+      "moves": 15,
+      "items": [
+        {
+          "crop": "eggplant",
+          "count": 12
+        },
+        {
+          "crop": "tomato",
+          "count": 8
+        }
+      ],
+      "none": {
+        "runs": 300,
+        "moves": 3687,
+        "avgValidMoves": 11.608082451857879,
+        "lowValidShare": 0.0005424464334147003,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.585570924871169,
+        "specialWithin10": 0.9966666666666667,
+        "avgDepth": 1.7154868456739898,
+        "deepShare": 0.17439652834282615,
+        "winRate": 0.71
+      },
+      "care": {
+        "runs": 300,
+        "moves": 3539,
+        "avgValidMoves": 11.72647640576434,
+        "lowValidShare": 0.0011302627860977678,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.5730432325515682,
+        "specialWithin10": 1,
+        "avgDepth": 1.7064142413111048,
+        "deepShare": 0.17773382311387398,
+        "winRate": 0.78
+      }
+    }
+  ]
+}

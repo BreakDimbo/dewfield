@@ -63,7 +63,7 @@ export interface Tunables {
 
 export const DEFAULT_TUNABLES: Tunables = {
   board: { width: 7, height: 7, minValidMoves: 3, shuffleMaxAttempts: 50 },
-  spawn: { stageWeights: [0.7, 0.3, 0.0], orderBias: 0.25 },
+  spawn: { stageWeights: [0.7, 0.3, 0.0], orderBias: 0.1 },
   growth: { neighborRipen: 'all', maxPerStep: 1, createdSpecialStage: 2 },
   special: { sickleOrientation: 'parallel', beeEnabled: true, dewOrbRadius: 1, dewOrbRingRadius: 2 },
   commission: { movesByTier: { 1: 24, 2: 22, 3: 20 }, maxItems: 2 },
@@ -78,7 +78,7 @@ export const DEFAULT_TUNABLES: Tunables = {
     starBonus: 10,
     tutorialMoveBonus: 5,
   },
-  care: { pointsBase: 3, waterOncePerRowPerDay: true, beePerDay: 1 },
+  care: { pointsBase: 5, waterOncePerRowPerDay: true, beePerDay: 1 },
   overnight: { growth: 1 },
   terrace: { levelThresholds: [3, 6] },
   tutorial: { autoCompleteAfterFails: 2 },
