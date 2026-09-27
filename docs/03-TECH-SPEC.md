@@ -577,14 +577,14 @@ buildTimeline(events: BoardEvent[], adapters: ChoreoAdapters, timing: AnimTunabl
 - **源文件**：Blender 4.x 的 `.blend` 不进本仓库（体积大）；仓库只放优化后的 `.glb`。
 - **导出约定**：glTF 2.0 二进制，+Y 向上，1 单位 = 1 格，原点在格子底面中心。
 - **命名**：`crop_<id>_s<stage>`、`marker_<kind>`、`plot_dish`、`rim_ripe`、`terrace_<part>`、`decor_<id>`；装饰挂点用空节点 `spot_<name>`（与 02 §16.2 的 `spot` 字段对应）。
-- **材质**：256² 色板贴图或顶点色 + `MeshStandardMaterial`（粗糙度 0.8–1，金属度 0）；露台的烘焙 AO 放在顶点色或第二套 UV。
+- **材质**：256² 色板贴图或顶点色 + `MeshStandardMaterial`（粗糙度 0.8–1，金属度 0）；露台的烘焙 AO 放在顶点色或第二套 UV。田间作物共用的材质经 `onBeforeCompile` 扩展（`cropShading.ts`）：按顶点色 alpha 的材质类别改粗糙度，加暖色边缘光、叶片逆光透亮与风吹摆动（减弱动效时关闭）；仍是 1 个材质、每格 1 次 draw call。
 - **面数预算**：熟作物 ≤ 1500 三角形，青 ≤ 1200，芽 ≤ 800；标记 ≤ 600；露台总计 ≤ 60k；每件装饰 ≤ 5k。
 - **优化**：`tools/assets/optimize.mjs <in> [out]` 用 gltf-transform API 依次执行 dedup → prune → weld → meshopt（`level: 'high'`，顶点色 12 bit），然后输出每个节点的三角形数和文件体积；任一节点超出上面的面数预算、缺 `COLOR_0`、有多个 primitive，或文件 > 1.5 MB，就以非零码退出。`--report <file>` 只出报告不改文件。（有贴图时再加 webp 压缩。）退化三角形保留，保证面数与灰盒逐一相等。
 - **AssetManifest**（`render/assets/manifest.ts`）：逻辑 id 映射到 `{ kind: 'greybox', build }` 或 `{ kind: 'gltf', url, node }`。**从灰盒换成正式美术只需要改 manifest**：文件里的常量 `ART` 从 `'greybox'` 改为 `'glb'`，所有 id 就改为从 `public/models/field.glb` 的同名节点取几何体。URL 参数 `?models=glb` / `?models=greybox` 可临时覆盖，用于在不改代码的情况下预览。
 - **glb 加载**（`render/assets/gltf.ts`）：`Stage` 用 `<Suspense>` + `assetsPending()` 包住 `FieldView`，在任何几何体被用到之前一次性 fetch + 解析 manifest 引用的全部 glb（GLTFLoader 与 MeshoptDecoder 都是动态 import，灰盒模式下不进首屏包，也不会挂起）；解析后把节点变换（含量化的偏移/缩放）烘焙进几何体、转成 float，只保留 `position` / `normal` / `color`。之后 `geometryOf()` 仍是同步调用。
 - **田间 glb 的制作约束**（`field.glb`；违反时加载报错或 optimize 报错）：
   1. 每个 manifest id 一个同名 **mesh 节点**（`crop_<id>_s<0|1|2>`、`marker_sickleH` / `marker_sickleV` / `marker_dewOrb` / `marker_bee`、`plot_dish`、`rim_ripe`，共 21 个），节点可以有变换或父节点，加载时会烘焙。
-  2. **必须带顶点色 `COLOR_0`**：田间所有物件共用一个开启 `vertexColors` 的 `MeshStandardMaterial`（1 个材质、每格 1 次 draw call），glb 里的材质和贴图都会被忽略，颜色只来自顶点色（线性空间，Blender 的 Color Attribute 导出即可）。
+  2. **必须带顶点色 `COLOR_0`**：田间所有物件共用一个开启 `vertexColors` 的 `MeshStandardMaterial`（1 个材质、每格 1 次 draw call），glb 里的材质和贴图都会被忽略，颜色只来自顶点色（线性空间，Blender 的 Color Attribute 导出即可）。作物节点的 `COLOR_0` 可以是 RGBA：alpha 不是透明度，而是材质类别（`src/render/field/cropShading.ts` 的 `CROP_MAT`：0.25 叶片 = 透光 + 随风摆动，0.5 雾面 = 蓝莓果粉 / 玉米须，0.75 光泽 = 番茄 / 茄子果皮，1 默认）；没有 alpha 时整株按默认处理。
   3. 每个节点只有 **1 个 primitive**（即 1 个材质槽）。
   4. 尺度与朝向与灰盒一致：+Y 向上，1 单位 = 1 格，原点在格子底面中心；作物已包含 `CROP_SCALE`（1.3）的呈现缩放。
 - **美术替换流程**：① `pnpm assets:models` 可随时从灰盒重新生成参考文件 `public/models/field.glb`（`tools/assets/export-greybox.ts` 用 GLTFExporter 导出 → optimize.mjs），可导入 Blender 作为比例和命名参考；② 美术在 Blender 中按上面的约束制作，导出 glb 到任意位置；③ `pnpm assets:optimize <导出.glb> public/models/field.glb`，报告全绿；④ `pnpm test` 中的 `tools/assets/field-glb.test.ts` 会检查 21 个节点都存在、带 `COLOR_0`；只有当文件是灰盒导出的（scene extras `source: 'greybox'`）时，才额外断言每个节点与灰盒原件的面数、包围盒、表面积和面积加权平均色一致，正式美术不受这条约束；⑤ 用 `?models=glb` 预览，确认后把 manifest 的 `ART` 改为 `'glb'`——这一行就是渲染侧唯一的 diff（04 P2-09 验收 3）。

@@ -14,6 +14,7 @@ import { usePresentationStore } from '@/state/presentationStore';
 import { useRunStore } from '@/state/runStore';
 import { useUiStore } from '@/state/uiStore';
 import { cellX, cellZ } from './layout';
+import { cropUniforms } from './cropShading';
 import { PreviewOverlay } from './PreviewOverlay';
 import { TilePool } from './TilePool';
 
@@ -66,6 +67,8 @@ export function FieldView() {
   useFrame((state, dt) => {
     const ms = Math.min(dt, 0.05) * 1000;
     runtime.choreo.tick(ms);
+    cropUniforms.uTime.value = state.clock.elapsedTime;
+    cropUniforms.uWind.value = useAppStore.getState().settings.reducedMotion ? 0 : 1;
     camera.getWorldQuaternion(camQ);
     const rs = useRunStore.getState();
     const busy = usePresentationStore.getState().busy;

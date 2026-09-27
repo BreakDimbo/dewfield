@@ -17,6 +17,7 @@ import { useAppStore } from '@/state/appStore';
 import { useUiStore } from '@/state/uiStore';
 import { gameCfg } from '@/state/config';
 import { PRESETS, type LightPreset } from './presets';
+import { cropUniforms } from '@/render/field/cropShading';
 
 type PresetId = keyof typeof PRESETS;
 
@@ -30,6 +31,7 @@ function presetFor(): PresetId {
 export function LightingRig() {
   const scene = useThree((s) => s.scene);
   const gl = useThree((s) => s.gl);
+  const camera = useThree((s) => s.camera);
   const hemi = useMemo(() => new HemisphereLight(), []);
   const sun = useMemo(() => new DirectionalLight(), []);
   const fog = useMemo(() => new Fog('#EFE8DC', 26, 60), []);
@@ -116,6 +118,9 @@ export function LightingRig() {
     u.horizon!.value.copy(c.domeHorizon);
     u.glow!.value.copy(c.domeGlow);
     u.sunDir!.value.copy(c.sunDir);
+    cropUniforms.uSunView.value.copy(c.sunDir).transformDirection(camera.matrixWorldInverse);
+    cropUniforms.uSunColor.value.copy(c.sun);
+    cropUniforms.uRimColor.value.copy(c.domeGlow);
   });
 
   return (

@@ -58,5 +58,12 @@ describe('public/models/field.glb (P2-09)', () => {
     const [s, r] = [surface(g), surface(ref)];
     expect(Math.abs(s.area - r.area) / r.area).toBeLessThan(5e-3);
     for (let k = 0; k < 3; k++) expect(Math.abs(s.rgb[k]! - r.rgb[k]!)).toBeLessThan(5e-4);
+    // Crop material classes (cropShading CROP_MAT, in COLOR_0.a) survive export + quantisation.
+    const [ca, ra] = [g.getAttribute('color'), ref.getAttribute('color')];
+    expect(ca.itemSize).toBe(ra.itemSize);
+    if (ra.itemSize === 4) {
+      const classes = (a: typeof ca) => [...new Set(Array.from({ length: a.count }, (_, i) => Math.round(a.getW(i) * 4)))].sort();
+      expect(classes(ca)).toEqual(classes(ra));
+    }
   });
 });

@@ -18,6 +18,7 @@ import type { CropId } from '@/core/config/crops';
 import type { TileAdapter } from '@/render/choreo/builder';
 import { blobShadowTexture, glowTexture } from '@/render/assets/greybox';
 import { geometryOf, manifest } from '@/render/assets/manifest';
+import { applyCropShading } from './cropShading';
 import { cellX, cellZ } from './layout';
 
 /** RD-2 scale channel. */
@@ -71,6 +72,7 @@ export class TilePool implements TileAdapter {
   private readonly shadows: InstancedMesh;
 
   constructor(capacity = 112) {
+    applyCropShading(this.material);
     const inst = (geo: BufferGeometry, mat: MeshStandardMaterial | MeshBasicMaterial, order = 0) => {
       const m = new InstancedMesh(geo, mat, capacity);
       m.instanceMatrix.setUsage(DynamicDrawUsage);

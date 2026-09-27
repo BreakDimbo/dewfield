@@ -19,6 +19,7 @@ import {
 import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { CropSpecial, Stage } from '@/core/board/model';
 import type { CropId } from '@/core/config/crops';
+import { CROP_MAT, type CropMat } from '@/render/field/cropShading';
 import { PAL, cropColor, leafColor } from './palette';
 
 /** 03 §14 greybox generator: one merged, vertex-coloured geometry per (crop, stage) → 1 draw call per tile. */
@@ -75,7 +76,7 @@ export function bakeAO(parts: BufferGeometry[], strength = 0.9, floor = 0.55): v
         if (j === i || sph.radius < 0.02) return;
         d.subVectors(sph.center, p);
         const l = Math.max(d.length(), sph.radius * 1.05);
-        occ += Math.max(0, n.dot(d) / l) * (sph.radius * sph.radius) / (l * l);
+        occ += (Math.max(0, n.dot(d) / l) * (sph.radius * sph.radius)) / (l * l);
       });
       // Contact with the soil: the lowest few centimetres, more so on surfaces facing down or sideways.
       occ += Math.max(0, 1 - p.y / 0.1) * (0.6 - 0.4 * n.y);
@@ -85,9 +86,23 @@ export function bakeAO(parts: BufferGeometry[], strength = 0.9, floor = 0.55): v
   });
 }
 
-/** Crop merge: bake AO across the parts first. */
+/** Mark a crop part's material class (glossy skin, leaf, …); untagged parts are 'body'. */
+function tag(g: BufferGeometry, mat: CropMat): BufferGeometry {
+  g.userData.mat = mat;
+  return g;
+}
+const leafy = (g: BufferGeometry) => tag(g, 'leaf');
+
+/** Crop merge: bake AO across the parts, then widen colours to RGBA with the material class in alpha. */
 function mergeCrop(parts: BufferGeometry[]): BufferGeometry {
   bakeAO(parts);
+  for (const g of parts) {
+    const rgb = g.getAttribute('color');
+    const a = CROP_MAT[(g.userData.mat as CropMat | undefined) ?? 'body'];
+    const rgba = new Float32Array(rgb.count * 4);
+    for (let i = 0; i < rgb.count; i++) rgba.set([rgb.getX(i), rgb.getY(i), rgb.getZ(i), a], i * 4);
+    g.setAttribute('color', new BufferAttribute(rgba, 4));
+  }
   return merge(parts);
 }
 
@@ -146,7 +161,9 @@ function carrot(stage: Stage): BufferGeometry {
     pos.setXYZ(i, v.x * ring + 0.05 * (0.55 - v.y) ** 2, v.y, v.z * ring);
   }
   const parts: BufferGeometry[] = [
-    part(smooth(root), (p) => (p.y > 0.5 ? shoulder : Math.sin(p.y * 62) > 0.7 && p.y < 0.47 ? groove : body), { p: [0, 0.03, 0] }),
+    part(smooth(root), (p) => (p.y > 0.5 ? shoulder : Math.sin(p.y * 62) > 0.7 && p.y < 0.47 ? groove : body), {
+      p: [0, 0.03, 0],
+    }),
   ];
   const lc = leafColor(stage);
   const ll = leafColor(stage, true);
@@ -165,7 +182,7 @@ function carrot(stage: Stage): BufferGeometry {
     const q2 = new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), dir);
     stem.applyQuaternion(q2);
     stem.translate(base.x, base.y, base.z);
-    parts.push(part(stem, f % 2 ? ll : lc));
+    parts.push(leafy(part(stem, f % 2 ? ll : lc)));
     for (let k = 1; k <= 3; k++) {
       const at = base.clone().addScaledVector(dir, (len * k) / 3.4);
       for (const side of [-1, 1]) {
@@ -175,7 +192,7 @@ function carrot(stage: Stage): BufferGeometry {
         const out = new Vector3(Math.cos(yaw) * side, 0.9, -Math.sin(yaw) * side).normalize();
         g.applyQuaternion(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), out.lerp(dir, 0.35).normalize()));
         g.translate(at.x, at.y, at.z);
-        parts.push(part(g, k % 2 ? ll : lc));
+        parts.push(leafy(part(g, k % 2 ? ll : lc)));
       }
     }
     const tip = new ConeGeometry(0.028, 0.1, 5, 1);
@@ -184,7 +201,7 @@ function carrot(stage: Stage): BufferGeometry {
     tip.applyQuaternion(q2);
     const end = base.clone().addScaledVector(dir, len);
     tip.translate(end.x, end.y, end.z);
-    parts.push(part(tip, ll));
+    parts.push(leafy(part(tip, ll)));
   });
   return mergeCrop(parts);
 }
@@ -212,15 +229,22 @@ function tomato(stage: Stage): BufferGeometry {
     g.rotateZ(-1.25);
     g.rotateY(-a);
     g.translate(0, 0.42, 0);
-    return part(g, i % 2 ? lc : ld);
+    return leafy(part(g, i % 2 ? lc : ld));
   });
   return mergeCrop([
-    part(smooth(sphere), (p) => {
-      const hi = p.y > 0.1 && p.x < -0.05 && p.z > 0 ? 0.28 : p.y > 0.14 ? 0.12 : 0;
-      return body.clone().lerp(new Color('#FFB7A0'), hi);
-    }, { p: [0, 0.23, 0], s: [1, 0.82, 1] }),
+    tag(
+      part(
+        smooth(sphere),
+        (p) => {
+          const hi = p.y > 0.1 && p.x < -0.05 && p.z > 0 ? 0.28 : p.y > 0.14 ? 0.12 : 0;
+          return body.clone().lerp(new Color('#FFB7A0'), hi);
+        },
+        { p: [0, 0.23, 0], s: [1, 0.82, 1] },
+      ),
+      'gloss',
+    ),
     ...calyx,
-    part(new CylinderGeometry(0.014, 0.022, 0.09, 6), ld, { p: [0.01, 0.47, 0], r: [0, 0, 0.25] }),
+    leafy(part(new CylinderGeometry(0.014, 0.022, 0.09, 6), ld, { p: [0.01, 0.47, 0], r: [0, 0, 0.25] })),
   ]);
 }
 
@@ -251,16 +275,23 @@ function corn(stage: Stage): BufferGeometry {
     g.rotateZ(tilt);
     g.rotateY(yaw);
     g.translate(0, 0.04, 0);
-    return part(g, col);
+    return leafy(part(g, col));
   };
   const silk = [0, 1, 2, 3].map((k) =>
-    part(new CylinderGeometry(0.006, 0.01, 0.13, 4), new Color(k % 2 ? '#D9B27A' : '#C79D62'), {
-      p: [0.02 * Math.cos(k * 1.6), 0.73, 0.02 * Math.sin(k * 1.6)],
-      r: [0.4 * Math.sin(k), 0, 0.5 * Math.cos(k * 2)],
-    }),
+    tag(
+      part(new CylinderGeometry(0.006, 0.01, 0.13, 4), new Color(k % 2 ? '#D9B27A' : '#C79D62'), {
+        p: [0.02 * Math.cos(k * 1.6), 0.73, 0.02 * Math.sin(k * 1.6)],
+        r: [0.4 * Math.sin(k), 0, 0.5 * Math.cos(k * 2)],
+      }),
+      'dusty',
+    ),
   );
   return mergeCrop([
-    part(smooth(cob), (p) => (Math.sin(p.y * 95) < -0.2 || Math.sin(Math.atan2(p.z, p.x) * 14) < -0.3 ? kernelDark : body), { p: [0, 0.38, 0] }),
+    part(
+      smooth(cob),
+      (p) => (Math.sin(p.y * 95) < -0.2 || Math.sin(Math.atan2(p.z, p.x) * 14) < -0.3 ? kernelDark : body),
+      { p: [0, 0.38, 0] },
+    ),
     husk(0, -0.32, 0.54, lc),
     husk(Math.PI, -0.3, 0.5, ll),
     husk(Math.PI / 2, -0.22, 0.42, shade(lc, 0.92)),
@@ -301,13 +332,16 @@ function eggplant(stage: Stage): BufferGeometry {
     c2.rotateZ(0.5);
     c2.rotateY(-a);
     c2.translate(0.1, 0.57, 0);
-    return part(c2, i % 2 ? lc : shade(lc, 0.88));
+    return leafy(part(c2, i % 2 ? lc : shade(lc, 0.88)));
   });
   return mergeCrop([
-    part(smooth(g), (p) => (p.x < -0.1 && p.y > 0.12 && p.y < 0.34 ? sheen : body), { p: [-0.07, 0.03, 0] }),
-    part(new SphereGeometry(0.07, 10, 6), lc, { p: [0.09, 0.59, 0], s: [1, 0.55, 1] }),
+    tag(
+      part(smooth(g), (p) => (p.x < -0.1 && p.y > 0.12 && p.y < 0.34 ? sheen : body), { p: [-0.07, 0.03, 0] }),
+      'gloss',
+    ),
+    leafy(part(new SphereGeometry(0.07, 10, 6), lc, { p: [0.09, 0.59, 0], s: [1, 0.55, 1] })),
     ...cap,
-    part(new CylinderGeometry(0.018, 0.026, 0.11, 6), shade(lc, 0.85), { p: [0.12, 0.66, 0], r: [0, 0, -0.4] }),
+    leafy(part(new CylinderGeometry(0.018, 0.026, 0.11, 6), shade(lc, 0.85), { p: [0.12, 0.66, 0], r: [0, 0, -0.4] })),
   ]);
 }
 
@@ -323,7 +357,12 @@ function blueberry(stage: Stage): BufferGeometry {
   const parts: BufferGeometry[] = [];
   for (const [x, y, z, r] of berries) {
     const sph = new SphereGeometry(r, 12, 8);
-    parts.push(part(sph, (p) => (p.y > 0.04 ? bloom : body), { p: [x, y, z], s: [1, 0.92, 1] }));
+    parts.push(
+      tag(
+        part(sph, (p) => (p.y > 0.04 ? bloom : body), { p: [x, y, z], s: [1, 0.92, 1] }),
+        'dusty',
+      ),
+    );
     for (let k = 0; k < 5; k++) {
       const a = (k / 5) * Math.PI * 2;
       parts.push(
@@ -335,9 +374,21 @@ function blueberry(stage: Stage): BufferGeometry {
     }
   }
   const lc = leafColor(stage);
-  parts.push(part(new SphereGeometry(1, 8, 6), lc, { p: [0.04, 0.32, -0.2], r: [0.7, 0.3, 0.2], s: [0.11, 0.018, 0.2] }));
-  parts.push(part(new SphereGeometry(1, 8, 6), leafColor(stage, true), { p: [-0.1, 0.3, -0.2], r: [0.7, -0.5, -0.3], s: [0.08, 0.016, 0.15] }));
-  parts.push(part(new CylinderGeometry(0.01, 0.014, 0.2, 5), shade(lc, 0.8), { p: [0, 0.27, -0.1], r: [0.55, 0, 0] }));
+  parts.push(
+    leafy(part(new SphereGeometry(1, 8, 6), lc, { p: [0.04, 0.32, -0.2], r: [0.7, 0.3, 0.2], s: [0.11, 0.018, 0.2] })),
+  );
+  parts.push(
+    leafy(
+      part(new SphereGeometry(1, 8, 6), leafColor(stage, true), {
+        p: [-0.1, 0.3, -0.2],
+        r: [0.7, -0.5, -0.3],
+        s: [0.08, 0.016, 0.15],
+      }),
+    ),
+  );
+  parts.push(
+    leafy(part(new CylinderGeometry(0.01, 0.014, 0.2, 5), shade(lc, 0.8), { p: [0, 0.27, -0.1], r: [0.55, 0, 0] })),
+  );
   return mergeCrop(parts);
 }
 
@@ -366,7 +417,10 @@ export function beeGeometry(): BufferGeometry {
   const ink = new Color(PAL.charcoal);
   const wing = new Color('#FDFBF6');
   beeGeo = merge([
-    part(new SphereGeometry(1, 13, 9), (p) => (Math.sin(p.z * 34) > 0.35 ? ink : honey), { p: [0, 0.3, 0], s: [0.17, 0.15, 0.22] }),
+    part(new SphereGeometry(1, 13, 9), (p) => (Math.sin(p.z * 34) > 0.35 ? ink : honey), {
+      p: [0, 0.3, 0],
+      s: [0.17, 0.15, 0.22],
+    }),
     part(new SphereGeometry(1, 12, 8), ink, { p: [0, 0.33, 0.2], s: [0.1, 0.1, 0.09] }),
     part(new SphereGeometry(1, 10, 6), wing, { p: [0.13, 0.47, -0.02], r: [0, 0.3, -0.5], s: [0.14, 0.03, 0.09] }),
     part(new SphereGeometry(1, 10, 6), wing, { p: [-0.13, 0.47, -0.02], r: [0, -0.3, 0.5], s: [0.14, 0.03, 0.09] }),
@@ -394,7 +448,11 @@ export function markerGeometry(kind: CropSpecial): BufferGeometry {
       [0, 0.34],
     ].map(([x, y]) => new Vector2(x, y));
     g = merge([
-      part(new LatheGeometry(drop, 16), (p) => (p.x < -0.04 && p.y > 0.12 ? new Color('#EAF5FA') : new Color(PAL.dew)), { p: [0, -0.16, 0] }),
+      part(
+        new LatheGeometry(drop, 16),
+        (p) => (p.x < -0.04 && p.y > 0.12 ? new Color('#EAF5FA') : new Color(PAL.dew)),
+        { p: [0, -0.16, 0] },
+      ),
       part(new TorusGeometry(0.2, 0.022, 6, 28), new Color('#CFE6EF'), { p: [0, -0.14, 0], r: [Math.PI / 2, 0, 0] }),
     ]);
   } else {
@@ -433,7 +491,9 @@ export function dishGeometry(): BufferGeometry {
   const saucer = new Color(PAL.saucer);
   const soil = new Color(PAL.soil);
   dishGeo = merge([
-    part(new LatheGeometry(profile.reverse(), 22), (p) => (Math.hypot(p.x, p.z) < 0.4 ? soil : p.y > 0.06 ? saucer : new Color(PAL.saucerShade))),
+    part(new LatheGeometry(profile.reverse(), 22), (p) =>
+      Math.hypot(p.x, p.z) < 0.4 ? soil : p.y > 0.06 ? saucer : new Color(PAL.saucerShade),
+    ),
   ]);
   return dishGeo;
 }
@@ -442,7 +502,9 @@ let rimGeo: BufferGeometry | null = null;
 /** RD-2: ripe tiles get a gold rim on the saucer. */
 export function rimGeometry(): BufferGeometry {
   if (rimGeo) return rimGeo;
-  rimGeo = merge([part(new TorusGeometry(0.445, 0.024, 6, 36), new Color(PAL.gold), { p: [0, 0.075, 0], r: [Math.PI / 2, 0, 0] })]);
+  rimGeo = merge([
+    part(new TorusGeometry(0.445, 0.024, 6, 36), new Color(PAL.gold), { p: [0, 0.075, 0], r: [Math.PI / 2, 0, 0] }),
+  ]);
   return rimGeo;
 }
 
