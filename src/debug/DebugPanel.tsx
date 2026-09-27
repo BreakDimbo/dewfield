@@ -2,14 +2,25 @@ import type * as LevaModule from 'leva';
 import { useEffect, useState } from 'react';
 import { parseBoard, printBoard } from '@/core/board/ascii';
 import { fieldBoard } from '@/core/homestead/homestead';
+import { now } from '@/platform/clock';
 import { mounts, renderStats } from '@/render/runtime';
 import { useAppStore } from '@/state/appStore';
 import { overrideTunables, gameCfg } from '@/state/config';
 import { usePresentationStore } from '@/state/presentationStore';
 import { useRunStore } from '@/state/runStore';
+import { telemetry } from '@/state/telemetryLogger';
 import css from './debug.module.css';
 
 type Leva = typeof LevaModule;
+
+/** 02 §13.4: the only way telemetry leaves the device. The file is the raw event array `pnpm kpi` reads. */
+function exportTelemetry(): void {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([telemetry.exportJson()], { type: 'application/json' }));
+  a.download = `dewfield-telemetry-${now()}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 0);
+}
 
 /** 03 §16 `?debug=1`. Lives in its own lazy chunk; leva is only pulled in here. */
 export default function DebugPanel() {
@@ -89,6 +100,7 @@ export default function DebugPanel() {
         <button onClick={openTuning} disabled={tuning}>
           {tuning ? 'leva ✓' : '调参 (leva)'}
         </button>
+        <button onClick={exportTelemetry}>导出遥测</button>
       </div>
       {tuning && <LevaTuning />}
     </aside>

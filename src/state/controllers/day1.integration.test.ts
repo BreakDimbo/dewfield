@@ -7,6 +7,7 @@ import { useAppStore } from '@/state/appStore';
 import { bus } from '@/state/bus';
 import { gameCfg } from '@/state/config';
 import { persistence } from '@/state/persistence';
+import { telemetry } from '@/state/telemetryLogger';
 import { useRunStore } from '@/state/runStore';
 import { useUiStore } from '@/state/uiStore';
 import { gameController } from './gameController';
@@ -19,6 +20,7 @@ beforeEach(() => {
   useAppStore.setState({ app: 'boot', home: null, settlement: null, notices: [] });
   useRunStore.setState({ run: null, phase: 'ended', paused: false, selected: null, preview: null, guide: null });
   useUiStore.setState({ tips: [], careMode: 'none', guideRow: null, panel: 'none', briefReadOnly: false });
+  telemetry.reset();
   bus.clear();
   bus.on('boardEvents', (p) => {
     if (p.kind === 'move' || p.kind === 'reject') queueMicrotask(() => runController.timelineDone());
@@ -145,6 +147,26 @@ describe('day 1 flow and gates (P1-27, 02 §11.1)', () => {
     await flush();
     expect(gate()).toBe('done');
     expect(useAppStore.getState().home!.commissions.active?.id).toBe('C01');
+  });
+
+  it('care telemetry: guided watering is prompted, free watering is not (P1-24 #3)', async () => {
+    gameController.boot();
+    gameController.newGame(8);
+    await playOut(true);
+    gameController.openBrief();
+    gameController.startRun();
+    await playOut(true);
+    gameController.closeBrief();
+    const guided = useUiStore.getState().guideRow!;
+    expect(gameController.waterRow(guided)).toBe(true);
+    expect(gate()).toBe('G4');
+    gameController.setCareMode('water');
+    expect(gameController.waterRow((guided + 1) % 7)).toBe(true);
+    const care = telemetry.all().filter((e) => e.e === 'care');
+    expect(care.map((e) => [e.target, e.prompted])).toEqual([
+      [String(guided), true],
+      [String((guided + 1) % 7), false],
+    ]);
   });
 
   it('each tip is shown once per save', async () => {

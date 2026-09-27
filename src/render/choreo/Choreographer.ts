@@ -5,6 +5,7 @@ import { bus, type BusChannels } from '@/state/bus';
 import { gameController } from '@/state/controllers/gameController';
 import { runController } from '@/state/controllers/runController';
 import { launchFlyer, pulseHud, showBanner, usePresentationStore } from '@/state/presentationStore';
+import { telemetry } from '@/state/telemetryLogger';
 import type { TilePool } from '@/render/field/TilePool';
 import type { VfxSystem } from '@/render/vfx/VfxSystem';
 import { buildTimeline, type ChoreoAdapters } from './builder';
@@ -172,6 +173,7 @@ export class Choreographer {
     if (bad > 0) {
       console.error(`[choreo] presentation diverged from logic on ${bad} tiles; snapping`);
       usePresentationStore.setState((s) => ({ mismatches: s.mismatches + 1 }));
+      telemetry.log('choreo_mismatch', { moveIndex: p.run.moveIndex, count: bad });
       this.pool.snap(p.run.board);
       if (new URLSearchParams(location.search).has('autoplay')) throw new Error('choreo_mismatch');
     }

@@ -18,14 +18,28 @@ const median = (xs: number[]): number | null => {
   return s.length % 2 ? s[m]! : (s[m - 1]! + s[m]!) / 2;
 };
 
+/**
+ * One list per tester: events carrying `tid` group by it (a reload starts a new `sid` but is the same tester);
+ * older exports without `tid` fall back to `sid`. `t` restarts per page load, so each `sid` is sorted on its own
+ * and page loads are concatenated in the order they first appear in the export (the ring buffer is chronological).
+ */
 function bySession(events: readonly TelemetryEvent[]): Map<string, TelemetryEvent[]> {
-  const m = new Map<string, TelemetryEvent[]>();
+  const loads = new Map<string, TelemetryEvent[]>();
+  const tester = new Map<string, string>();
   for (const e of events) {
-    const list = m.get(e.sid);
+    const list = loads.get(e.sid);
     if (list) list.push(e);
-    else m.set(e.sid, [e]);
+    else loads.set(e.sid, [e]);
+    if (e.tid && !tester.has(e.sid)) tester.set(e.sid, e.tid);
   }
-  for (const list of m.values()) list.sort((a, b) => a.t - b.t);
+  const m = new Map<string, TelemetryEvent[]>();
+  for (const [sid, list] of loads) {
+    list.sort((a, b) => a.t - b.t);
+    const key = tester.get(sid) ?? sid;
+    const acc = m.get(key);
+    if (acc) acc.push(...list);
+    else m.set(key, list);
+  }
   return m;
 }
 
@@ -125,6 +139,11 @@ const within = (xs: (number | null)[], ms: number) => {
   return xs.length ? got.filter((x) => x <= ms).length / xs.length : 0;
 };
 
+const unusedDist = (d: Record<number, number>) => {
+  const rows = Object.entries(d).sort(([a], [b]) => Number(a) - Number(b));
+  return rows.length ? rows.map(([k, n]) => `${k}→${n}`).join('，') : '—';
+};
+
 export function kpiMarkdown(r: KpiReport): string {
   const lines = [
     '# KPI 报告',
@@ -138,6 +157,7 @@ export function kpiMarkdown(r: KpiReport): string {
     `| K2（C02 前自发照料） | ${pct(r.k2.share)}（${r.k2.spontaneous}/${r.k2.sessions}） |`,
     `| K3（露台停留中位数） | ${r.k3MedianMs === null ? '—' : `${(r.k3MedianMs / 1000).toFixed(1)} 秒`} |`,
     `| K5（每天照料次数） | ${r.k5.carePerDay.toFixed(2)} |`,
+    `| K5（入夜未用照料点：点数→次数） | ${unusedDist(r.k5.careUnused)} |`,
     `| K6（预演使用率 / 每局回退） | ${pct(r.k6.previewUse)} / ${r.k6.undoPerRun.toFixed(2)} |`,
     '',
     '## K4 委托胜率',
@@ -146,7 +166,7 @@ export function kpiMarkdown(r: KpiReport): string {
     '|---|---|---|---|',
     ...Object.entries(r.k4)
       .sort(([a], [b]) => a.localeCompare(b))
-      .map(([id, v]) => `| ${id} | ${v.runs} | ${pct(v.winRate)} | ${v.meanAttempts.toFixed(2)} |`),
+      .map(([id, v]) => `| ${id} | ${v.runs} | ${pct(v.winRate)} | ${v.wins ? v.meanAttempts.toFixed(2) : '—'} |`),
   ];
   return lines.join('\n') + '\n';
 }

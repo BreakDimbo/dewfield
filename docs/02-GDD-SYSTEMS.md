@@ -606,6 +606,7 @@ interface TutorialStep {
 | `dewfield:save:corrupt:<ts>` | 无法读取的原始字符串（保留，供导出排查） |
 | `dewfield:settings` | 设置（独立于存档，重置存档不会清掉） |
 | `dewfield:telemetry` | 遥测环形缓冲（最多 5000 条） |
+| `dewfield:tester` | 本机测试者 id（遥测事件的 `tid`，跨刷新不变，重置存档不会清掉） |
 | `dewfield:lock` | 多标签页锁 `{ tabId, ts }` |
 
 ### 12.2 类型草案（zod schema 与之一一对应，见 03 §12）
@@ -749,6 +750,8 @@ interface RunState {
 `applyMove`、`careWaterRow`、`carePlaceBee`、`sleep`、`harvestRush` 都返回有序事件数组，TS 定义见 03 §5.4。语义要求：**从初始状态出发、只依据事件就能重放出最终棋盘**（04 P0-09 的测试会断言这一点）。
 
 ### 13.2 遥测事件（只存本地）
+
+每条事件都带 `t`（本次页面加载以来的毫秒数）、`sid`（每次页面加载一个）和 `tid`（本机测试者 id，见 §12.1；旧导出没有）。`tools/kpi` 有 `tid` 时按测试者分组，否则按 `sid`。
 
 | 事件 | 触发时机 | 字段 |
 |---|---|---|

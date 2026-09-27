@@ -1,5 +1,5 @@
 /** 02 §13.2 local-only telemetry. `t` is ms since the session started (passed in by the platform clock). */
-export type TelemetryEvent =
+type TelemetryBody =
   | { e: 'session_start'; t: number; sid: string; build: string; ua: string; dpr: number; quality: string; w: number; h: number }
   | { e: 'tutorial_step'; t: number; sid: string; step: string }
   | { e: 'tip_shown'; t: number; sid: string; tip: string }
@@ -23,6 +23,9 @@ export type TelemetryEvent =
   | { e: 'legalize_fix'; t: number; sid: string; count: number }
   | { e: 'choreo_mismatch'; t: number; sid: string; moveIndex: number; count: number }
   | { e: 'bench_result'; t: number; sid: string; avgMs: number; p95Ms: number; dpr: number; quality: string };
+
+/** `sid` is one page load; the optional `tid` is a per-device tester id that survives reloads (older exports lack it). */
+export type TelemetryEvent = TelemetryBody & { tid?: string };
 
 export type TelemetryName = TelemetryEvent['e'];
 
