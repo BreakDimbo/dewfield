@@ -18,7 +18,7 @@ export const NAMES = {
   station: '桜ヶ丘', stationKana: 'さくらがおか', stationEn: 'Sakuragaoka', stationNo: 'SK07',
   prev: { kanji: '花見台', kana: 'はなみだい', en: 'Hanamidai', no: 'SK06', dir: 'west' },
   next: { kanji: '春日野', kana: 'かすがの', en: 'Kasugano', no: 'SK08', dir: 'east' },
-  town: '桜ヶ丘町', shoppingStreet: '桜ヶ丘駅前商店街',
+  town: '樱丘镇', shoppingStreet: '桜ヶ丘駅前商店街',
 };
 
 // ---------------------------------------------------------------- playable bounds
@@ -330,18 +330,18 @@ export const FARM = (() => {
 
 // Named areas for the HUD location toast (first match wins).
 export const AREAS = [
-  { name: '桜ヶ丘ふれあい農園', x0: -85, x1: -15.5, z0: -84, z1: -72.6 },
-  { name: '桜ヶ丘駅 1番線ホーム', x0: -7, x1: 46, z0: -40, z1: -35.5 },
-  { name: '桜ヶ丘駅 2番線ホーム', x0: -7, x1: 46, z0: -51, z1: -46 },
-  { name: '桜ヶ丘駅', x0: -4, x1: 12, z0: -35.5, z1: -25 },
-  { name: '桜川線 第一踏切', x0: -17, x1: -7, z0: -52, z1: -34 },
-  { name: '駅前広場', x0: -9.25, x1: 26, z0: -25, z1: -5 },
-  { name: '駅前通り', x0: -95, x1: 95, z0: -5.5, z1: 1.5 },
-  { name: '桜ヶ丘駅前商店街', x0: -12, x1: 14, z0: 1.5, z1: 60 },
-  { name: '桜ヶ丘 住宅街', x0: -95, x1: 95, z0: 60, z1: 130 },
-  { name: '河川敷 · 桜川堤', x0: -130, x1: 130, z0: -120, z1: -84 },
-  { name: '線路北の住宅街', x0: -95, x1: 95, z0: -84, z1: -52 },
-  { name: '桜ヶ丘町', x0: -999, x1: 999, z0: -999, z1: 999 },
+  { name: '樱丘农园', x0: -85, x1: -15.5, z0: -84, z1: -72.6 },
+  { name: '樱丘站 1 号站台', x0: -7, x1: 46, z0: -40, z1: -35.5 },
+  { name: '樱丘站 2 号站台', x0: -7, x1: 46, z0: -51, z1: -46 },
+  { name: '樱丘站', x0: -4, x1: 12, z0: -35.5, z1: -25 },
+  { name: '樱川线 第一道口', x0: -17, x1: -7, z0: -52, z1: -34 },
+  { name: '站前广场', x0: -9.25, x1: 26, z0: -25, z1: -5 },
+  { name: '站前大道', x0: -95, x1: 95, z0: -5.5, z1: 1.5 },
+  { name: '樱丘站前商店街', x0: -12, x1: 14, z0: 1.5, z1: 60 },
+  { name: '樱丘 住宅区', x0: -95, x1: 95, z0: 60, z1: 130 },
+  { name: '河滩 · 樱川堤', x0: -130, x1: 130, z0: -120, z1: -84 },
+  { name: '铁路北侧住宅区', x0: -95, x1: 95, z0: -84, z1: -52 },
+  { name: '樱丘镇', x0: -999, x1: 999, z0: -999, z1: 999 },
 ];
 
 // Hero shot (initial camera). yaw/pitch in degrees (yaw 0 = north).

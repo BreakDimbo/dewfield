@@ -71,9 +71,9 @@ resize();
 // ------------------------------------------------------------------ fonts
 async function loadFonts() {
   if (!document.fonts || !document.fonts.load) return;
-  const faces = ['700 32px "Noto Sans JP"', '400 32px "Noto Sans JP"', '900 32px "Noto Sans JP"', '700 32px "Noto Serif JP"',
+  const faces = ['700 32px "Noto Sans SC"', '900 32px "Noto Sans SC"', '700 32px "Noto Sans JP"', '400 32px "Noto Sans JP"', '900 32px "Noto Sans JP"', '700 32px "Noto Serif JP"',
     '700 32px "Zen Maru Gothic"', '400 32px "Yusei Magic"', '400 32px "Yuji Syuku"'];
-  const jp = '桜ヶ丘駅さくらがおかSakuragaoka和菓子花屋書店喫茶止まれ';
+  const jp = '桜ヶ丘駅さくらがおかSakuragaoka和菓子花屋書店喫茶止まれ樱丘农园开始种树';
   await Promise.race([Promise.all(faces.map(f => document.fonts.load(f, jp).catch(() => null))), new Promise(r => setTimeout(r, 6000))]);
 }
 
@@ -85,10 +85,10 @@ function setProgress(frac, label) {
   const lab = $('loadlabel'); if (lab && label) lab.textContent = label;
 }
 const LABELS = {
-  environment: '地形と河川敷', street: '商店街の道', poles: '電柱と電線', railway: '線路と架線', station: '駅舎とホーム', plaza: '駅前広場',
-  shopsA: 'コンビニ・喫茶・花屋・書店', shopsB: '和菓子・よろず屋・ラーメン・自転車店', houses: '住宅街', sakura: '桜並木', trains: '電車',
-  crossing: '踏切', props: '自販機と小物', vehicles: '自転車と車', characters: '町の人々', petals: '花びら',
-  farm: 'ふれあい農園', trees: '畑の木',
+  environment: '地形和河滩', street: '商店街道路', poles: '电线杆和电线', railway: '铁轨和接触网', station: '车站和站台', plaza: '站前广场',
+  shopsA: '便利店、咖啡馆、花店、书店', shopsB: '和果子店、杂货铺、拉面馆、自行车店', houses: '住宅区', sakura: '樱花树', trains: '电车',
+  crossing: '道口', props: '自动售货机和小物件', vehicles: '自行车和汽车', characters: '镇上的人', petals: '花瓣',
+  farm: '农园', trees: '田里的树',
 };
 
 async function build() {
@@ -96,7 +96,7 @@ async function build() {
   const list = ONLY ? MODULES.filter(m => ONLY.includes(m)).concat(ONLY.filter(m => !MODULES.includes(m))) : MODULES;
   let i = 0;
   for (const name of list) {
-    setProgress(i / (list.length + 1), `${LABELS[name] || name} を準備中…`);
+    setProgress(i / (list.length + 1), `正在准备${LABELS[name] || name}…`);
     await new Promise(r => setTimeout(r, 0));
     const t0 = performance.now();
     try {
@@ -111,7 +111,7 @@ async function build() {
     }
     i++;
   }
-  setProgress(list.length / (list.length + 1), '仕上げ中…');
+  setProgress(list.length / (list.length + 1), '收尾中…');
   await new Promise(r => setTimeout(r, 0));
   const wm = ctx.wires.build(); if (wm) { scene.add(wm); ctx.wires.setResolution(pipeline.size.x, pipeline.size.y); }
   const b = params.get('batch') === '1' ? batchStatic(ctx.staticRoot) : batchStatic2(ctx.staticRoot, { mat: ctx.mat });
@@ -132,12 +132,12 @@ window.__setCam = (x, y, z, yaw, pitch) => { if (y === null || y === undefined) 
 
 // sakura-farm: Shift+1…6 teleport (plain digits are the hotbar).
 const VIEWS = {
-  Digit6: { ...L.FARM.spawn, label: 'ふれあい農園' },
+  Digit6: { ...L.FARM.spawn, label: '农园' },
   Digit1: { ...L.HERO, label: '商店街' },
-  Digit2: { x: 9.5, z: -9.0, yaw: 12, pitch: 6, label: '駅前広場' },
-  Digit3: { x: 20.0, z: -37.6, yaw: 95, pitch: 0, label: '1番線ホーム' },
-  Digit4: { x: -12.8, z: -31.5, yaw: -8, pitch: 3, label: '踏切' },
-  Digit5: { x: -20.0, z: -92.8, yaw: 160, pitch: -2, label: '河川敷' },
+  Digit2: { x: 9.5, z: -9.0, yaw: 12, pitch: 6, label: '站前广场' },
+  Digit3: { x: 20.0, z: -37.6, yaw: 95, pitch: 0, label: '1 号站台' },
+  Digit4: { x: -12.8, z: -31.5, yaw: -8, pitch: 3, label: '道口' },
+  Digit5: { x: -20.0, z: -92.8, yaw: 160, pitch: -2, label: '河滩' },
 };
 
 // ------------------------------------------------------------------ simulation
@@ -222,7 +222,7 @@ function start() {
   document.body.classList.add('playing');
   player.requestLock();
   try { audio.start(); } catch (e) { console.warn(e); }
-  showToast(areaAt(player.pos.x, player.pos.z) || L.NAMES.shoppingStreet);
+  showToast(areaAt(player.pos.x, player.pos.z) || '樱丘站前商店街');
 }
 
 async function main() {

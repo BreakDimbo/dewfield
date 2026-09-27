@@ -101,7 +101,7 @@ export function createHud(root = document.body) {
       const inv = s.inventory;
       const rows = SPECIES.map((sp) => {
         const done = s.dex.matured[sp.id];
-        return `<tr class="${done ? 'done' : ''}"><th style="--c:${sp.color}">${sp.name}<small>${sp.kana}</small></th>
+        return `<tr class="${done ? 'done' : ''}"><th style="--c:${sp.color}">${sp.name}</th>
           <td>${inv.seeds[sp.id]}</td><td>${inv.produce[sp.id]}</td><td>${done ? '✓ 已长成' : '—'}</td></tr>`;
       }).join('');
       const plots = s.plots.map((p, i) => `<li><b>${'一二三四五六七八'[i]}</b>${p.species ? `${SPECIES_BY_ID[p.species].name} · ${STAGE_NAMES[p.stage]}${p.watered ? ' · 已浇水' : ''}${p.produce ? ` · 可收获 ${p.produce}` : ''}` : STAGE_NAMES[p.stage]}</li>`).join('');

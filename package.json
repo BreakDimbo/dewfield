@@ -1,7 +1,7 @@
 {
   "name": "sakura-farm",
   "version": "1.0.0",
-  "description": "桜ヶ丘ふれあい農園 — first-person tree-farming in the Sakuragaoka Station town (plain three.js)",
+  "description": "樱丘农园 — first-person tree-farming in the Sakuragaoka Station town (plain three.js)",
   "private": true,
   "type": "module",
   "license": "MIT",

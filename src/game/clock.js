@@ -35,7 +35,7 @@ export function sunDirection(minute) {
 /** Daylight 0…1 (0 = full night) used to blend sky, light and lamp intensities. */
 export function daylight(minute) {
   const h = minute / 60;
-  const up = smooth(5.5, 7.5, h);
+  const up = smooth(4.6, 6.6, h); // 6:00 (day start) is already mostly light
   const down = 1 - smooth(17.8, 19.6, h);
   return Math.min(up, down);
 }
