@@ -1,6 +1,6 @@
 import { PerformanceMonitor } from '@react-three/drei';
 import { Canvas, useThree } from '@react-three/fiber';
-import { useEffect, useState } from 'react';
+import { Suspense, use, useEffect, useState, type ReactNode } from 'react';
 import { useAppStore } from '@/state/appStore';
 import { effectiveTier, MAX_FLIPS, QUALITY_START, qualityStep } from './quality';
 import { ACESFilmicToneMapping, SRGBColorSpace } from 'three';
@@ -16,6 +16,14 @@ import { RowHighlight } from './terrace/RowHighlight';
 import { Terrace } from './terrace/Terrace';
 import { DecorSpots } from './terrace/DecorSpots';
 import { Signboard } from './terrace/Signboard';
+import { assetsPending } from './assets/manifest';
+
+/** 03 §14: suspend manifest consumers until every glTF source is parsed; the greybox set renders straight away. */
+function AssetGate({ children }: { children: ReactNode }) {
+  const p = assetsPending();
+  if (p) use(p);
+  return children;
+}
 
 function Gestures() {
   useBoardGestures();
@@ -69,7 +77,11 @@ export function Stage() {
       <Terrace />
       <DecorSpots />
       <Signboard />
-      <FieldView />
+      <Suspense fallback={null}>
+        <AssetGate>
+          <FieldView />
+        </AssetGate>
+      </Suspense>
       <RowHighlight />
       <CameraRig />
       <Gestures />
