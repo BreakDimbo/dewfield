@@ -19,7 +19,10 @@ const board = (bias = null) =>
   );
 const ascii = (b) => b.map((r) => r.join(' ')).join('\n');
 
-const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+const browser = await chromium.launch({
+  args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
+  executablePath: process.env.PW_CHROMIUM_PATH || undefined,
+});
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
 const H = (fn, ...a) => page.evaluate(([f, a]) => window.__DEWFIELD__[f](...a), [fn, a]);
 await page.goto(`http://localhost:5391/?e2e=1&seed=1`);
