@@ -6,6 +6,7 @@ import { preview } from '../game/farm.js';
 import { canSleep, mustSleep, formatTime } from '../game/clock.js';
 import { createHud, morningLines } from './hud.js';
 import { createTargeting } from './interact.js';
+import { openMatch3 } from './match3.js';
 
 export function startFarmUi(ctx, { player, canvas, isPlaying, shot }) {
   const game = ctx.services.game;
@@ -15,7 +16,10 @@ export function startFarmUi(ctx, { player, canvas, isPlaying, shot }) {
   let target = null;
   let busy = false; // a card / the minigame is open: no clock, no input
   let saveTimer = 0;
-  const ui = { hud, game, openMatch3: null, get busy() { return busy; } };
+  const ui = { hud, game, openMatch3: () => openMatch3(game, { reducedMotion: game.reducedMotion }), get busy() { return busy; } };
+  const rm = matchMedia('(prefers-reduced-motion: reduce)');
+  game.reducedMotion = rm.matches;
+  rm.addEventListener?.('change', () => (game.reducedMotion = rm.matches));
 
   if (game.loadError) hud.toast('存档无法读取，已经另存一份并开始新游戏', 'warn');
 
@@ -80,7 +84,12 @@ export function startFarmUi(ctx, { player, canvas, isPlaying, shot }) {
           document.exitPointerLock?.();
           aim.hide();
           hud.prompt(null);
-          ui.openMatch3().finally(() => {
+          sfx.coin();
+          ui.openMatch3().then((r) => {
+            if (r && Object.values(r.seeds).some((n) => n > 0) && !(game.state.inventory.seeds[game.seed] > 0)) {
+              game.seed = Object.keys(r.seeds).find((id) => r.seeds[id] > 0);
+            }
+          }).finally(() => {
             busy = false;
             hud.render(game);
             player.requestLock();

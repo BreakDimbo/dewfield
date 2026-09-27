@@ -1,0 +1,12 @@
+[
+  { "cam": [-25.6, -73.2, 0, -12], "frames": 3 },
+  { "use": true, "wait": 600, "shot": "m3-open" },
+  { "eval": "(async () => { for (let k = 0; k < 6; k++) { const h = window.__m3.hint(); await window.__m3.swap(h[0], h[1]); } return window.__m3.moves; })()" },
+  { "wait": 400, "shot": "m3-mid" },
+  { "eval": "window.__m3.swap(0, 1).then(() => window.__m3.moves)" },
+  { "eval": "(async () => { while (window.__m3.moves > 0) { const h = window.__m3.hint(); await window.__m3.swap(h[0], h[1]); } return 'done'; })()" },
+  { "wait": 600, "shot": "m3-end" },
+  { "key": "Enter", "wait": 300 },
+  { "eval": "JSON.stringify({tickets: window.__game.state.tickets, inv: window.__game.state.inventory, pts: window.__game.state.seedPoints})" },
+  { "frames": 3, "shot": "after" }
+]
