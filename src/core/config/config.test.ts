@@ -22,7 +22,7 @@ describe('core/config tunables (02 §14)', () => {
     expect(t.spawn.stageWeights).toEqual([0.7, 0.3, 0.0]);
     expect(t.anim.swap).toBe(99);
     expect(t.anim.grow).toBe(160);
-    expect(DEFAULT_TUNABLES.spawn.orderBias).toBe(0.25);
+    expect(DEFAULT_TUNABLES.spawn.orderBias).toBe(0.1);
     expect(Object.isFrozen(t)).toBe(true);
     expect(Object.isFrozen(t.spawn)).toBe(true);
     expect(Object.isFrozen(t.spawn.stageWeights)).toBe(true);

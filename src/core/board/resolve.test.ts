@@ -98,7 +98,8 @@ describe('refill (02 §1.7)', () => {
   it('random refills follow stage weights and order bias within ±1% (P1-03)', () => {
     const cfg = DEFAULT_TUNABLES;
     const cw = cropWeights(cfg, (c) => c === 'carrot');
-    expect(cw).toEqual([1250, 1000, 1000, 1000, 1000]);
+    const biased = Math.round(1000 * (1 + cfg.spawn.orderBias));
+    expect(cw).toEqual([biased, 1000, 1000, 1000, 1000]);
     const stage = [0, 0, 0];
     const crop: Record<string, number> = {};
     let rng = createRng(3);
@@ -116,8 +117,8 @@ describe('refill (02 §1.7)', () => {
     expect(Math.abs(stage[0]! / N - 0.7)).toBeLessThan(0.01);
     expect(Math.abs(stage[1]! / N - 0.3)).toBeLessThan(0.01);
     expect(stage[2]).toBe(0);
-    expect(Math.abs(crop.C! / N - 1250 / 5250)).toBeLessThan(0.01);
-    expect(Math.abs(crop.B! / N - 1000 / 5250)).toBeLessThan(0.01);
+    expect(Math.abs(crop.C! / N - biased / (biased + 4000))).toBeLessThan(0.01);
+    expect(Math.abs(crop.B! / N - 1000 / (biased + 4000))).toBeLessThan(0.01);
     expect(toPermille([0.7, 0.3, 0])).toEqual([700, 300, 0]);
   });
 

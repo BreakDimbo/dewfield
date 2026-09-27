@@ -40,7 +40,7 @@ exports[`core/config tunables (02 §14) > defaults match the 02 §14 table 1`] =
   },
   "care": {
     "beePerDay": 1,
-    "pointsBase": 3,
+    "pointsBase": 5,
     "waterOncePerRowPerDay": true,
   },
   "commission": {
@@ -86,7 +86,7 @@ exports[`core/config tunables (02 §14) > defaults match the 02 §14 table 1`] =
     "maxIterations": 30,
   },
   "spawn": {
-    "orderBias": 0.25,
+    "orderBias": 0.1,
     "stageWeights": [
       0.7,
       0.3,

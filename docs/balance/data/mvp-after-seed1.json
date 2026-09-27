@@ -1,0 +1,488 @@
+{
+  "profile": "MVP",
+  "runs": 1000,
+  "seed": 1,
+  "bot": "greedy",
+  "set": "",
+  "rows": [
+    {
+      "id": "T2",
+      "tier": 1,
+      "moves": 17,
+      "items": [
+        {
+          "crop": "tomato",
+          "count": 8
+        }
+      ],
+      "none": {
+        "runs": 1000,
+        "moves": 8585,
+        "avgValidMoves": 11.853232382061735,
+        "lowValidShare": 0.0005824111822947001,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.5675014560279558,
+        "specialWithin10": 0.996,
+        "avgDepth": 1.7120559114735003,
+        "deepShare": 0.17775189283634246,
+        "winRate": 0.985
+      },
+      "care": {
+        "runs": 1000,
+        "moves": 7137,
+        "avgValidMoves": 11.8699733781701,
+        "lowValidShare": 0.0008406893652795292,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.5743309513801317,
+        "specialWithin10": 0.987,
+        "avgDepth": 1.699873896595208,
+        "deepShare": 0.1744430432955023,
+        "winRate": 0.993
+      }
+    },
+    {
+      "id": "C01",
+      "tier": 1,
+      "moves": 24,
+      "items": [
+        {
+          "crop": "carrot",
+          "count": 10
+        }
+      ],
+      "none": {
+        "runs": 1000,
+        "moves": 10370,
+        "avgValidMoves": 11.707232401157183,
+        "lowValidShare": 0.0021215043394406945,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.55824493731919,
+        "specialWithin10": 0.998,
+        "avgDepth": 1.698553519768563,
+        "deepShare": 0.1712632594021215,
+        "winRate": 0.996
+      },
+      "care": {
+        "runs": 1000,
+        "moves": 8884,
+        "avgValidMoves": 11.85141828005403,
+        "lowValidShare": 0.0019135524538496174,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.5482890589824403,
+        "specialWithin10": 0.995,
+        "avgDepth": 1.689891940567312,
+        "deepShare": 0.16974335884736605,
+        "winRate": 1
+      }
+    },
+    {
+      "id": "C02",
+      "tier": 1,
+      "moves": 24,
+      "items": [
+        {
+          "crop": "blueberry",
+          "count": 12
+        }
+      ],
+      "none": {
+        "runs": 1000,
+        "moves": 12056,
+        "avgValidMoves": 11.785003317850034,
+        "lowValidShare": 0.0017418712674187127,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.5614631718646317,
+        "specialWithin10": 0.996,
+        "avgDepth": 1.7072826808228267,
+        "deepShare": 0.1776708692767087,
+        "winRate": 0.984
+      },
+      "care": {
+        "runs": 1000,
+        "moves": 10741,
+        "avgValidMoves": 11.767060795084257,
+        "lowValidShare": 0.0016758216180988734,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.5513453123545293,
+        "specialWithin10": 0.992,
+        "avgDepth": 1.6799180709431152,
+        "deepShare": 0.17046829904105762,
+        "winRate": 0.997
+      }
+    },
+    {
+      "id": "C03",
+      "tier": 1,
+      "moves": 24,
+      "items": [
+        {
+          "crop": "tomato",
+          "count": 8
+        },
+        {
+          "crop": "carrot",
+          "count": 6
+        }
+      ],
+      "none": {
+        "runs": 1000,
+        "moves": 9324,
+        "avgValidMoves": 11.945945945945946,
+        "lowValidShare": 0.0018232518232518232,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.5908408408408409,
+        "specialWithin10": 0.997,
+        "avgDepth": 1.7377734877734878,
+        "deepShare": 0.18447018447018448,
+        "winRate": 0.999
+      },
+      "care": {
+        "runs": 1000,
+        "moves": 7944,
+        "avgValidMoves": 12.023413897280967,
+        "lowValidShare": 0.0018882175226586104,
+        "shufflesPer25": 0.0062940584088620345,
+        "specialsPerMove": 0.5775427995971802,
+        "specialWithin10": 0.994,
+        "avgDepth": 1.725453172205438,
+        "deepShare": 0.18617824773413896,
+        "winRate": 1
+      }
+    },
+    {
+      "id": "C04",
+      "tier": 2,
+      "moves": 12,
+      "items": [
+        {
+          "crop": "corn",
+          "count": 9
+        }
+      ],
+      "none": {
+        "runs": 1000,
+        "moves": 8797,
+        "avgValidMoves": 11.795953165851994,
+        "lowValidShare": 0.0010230760486529499,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.5751960895759918,
+        "specialWithin10": 0.997,
+        "avgDepth": 1.7027395703080597,
+        "deepShare": 0.1755143799022394,
+        "winRate": 0.774
+      },
+      "care": {
+        "runs": 1000,
+        "moves": 7643,
+        "avgValidMoves": 11.92555279340573,
+        "lowValidShare": 0.0006541933795629988,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.572419207117624,
+        "specialWithin10": 0.987,
+        "avgDepth": 1.6693706659688603,
+        "deepShare": 0.1632866675389245,
+        "winRate": 0.872
+      }
+    },
+    {
+      "id": "C05",
+      "tier": 2,
+      "moves": 12,
+      "items": [
+        {
+          "crop": "eggplant",
+          "count": 9
+        },
+        {
+          "crop": "tomato",
+          "count": 6
+        }
+      ],
+      "none": {
+        "runs": 1000,
+        "moves": 9273,
+        "avgValidMoves": 11.992343362450123,
+        "lowValidShare": 0.0016175994823681655,
+        "shufflesPer25": 0.0026959991372802763,
+        "specialsPerMove": 0.5992666882346598,
+        "specialWithin10": 1,
+        "avgDepth": 1.742046802545023,
+        "deepShare": 0.1825730615766203,
+        "winRate": 0.768
+      },
+      "care": {
+        "runs": 1000,
+        "moves": 8450,
+        "avgValidMoves": 11.893136094674556,
+        "lowValidShare": 0.0026035502958579883,
+        "shufflesPer25": 0.008875739644970414,
+        "specialsPerMove": 0.5853254437869823,
+        "specialWithin10": 0.994,
+        "avgDepth": 1.7114792899408284,
+        "deepShare": 0.1757396449704142,
+        "winRate": 0.859
+      }
+    },
+    {
+      "id": "C06",
+      "tier": 2,
+      "moves": 14,
+      "items": [
+        {
+          "crop": "blueberry",
+          "count": 11
+        }
+      ],
+      "none": {
+        "runs": 1000,
+        "moves": 10326,
+        "avgValidMoves": 11.809219446058494,
+        "lowValidShare": 0.001452643811737362,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.5715669184582607,
+        "specialWithin10": 0.996,
+        "avgDepth": 1.7090838659693977,
+        "deepShare": 0.17819097423978308,
+        "winRate": 0.774
+      },
+      "care": {
+        "runs": 1000,
+        "moves": 9345,
+        "avgValidMoves": 11.806527554842162,
+        "lowValidShare": 0.0009630818619582664,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.5589085072231139,
+        "specialWithin10": 0.991,
+        "avgDepth": 1.6837881219903692,
+        "deepShare": 0.17067950775815943,
+        "winRate": 0.859
+      }
+    },
+    {
+      "id": "C07",
+      "tier": 2,
+      "moves": 11,
+      "items": [
+        {
+          "crop": "carrot",
+          "count": 7
+        },
+        {
+          "crop": "corn",
+          "count": 6
+        }
+      ],
+      "none": {
+        "runs": 1000,
+        "moves": 8133,
+        "avgValidMoves": 12.024468215910488,
+        "lowValidShare": 0.0013525144473134146,
+        "shufflesPer25": 0.003073896471166851,
+        "specialsPerMove": 0.5976884298536825,
+        "specialWithin10": 0.997,
+        "avgDepth": 1.7468338866346982,
+        "deepShare": 0.18652403787040453,
+        "winRate": 0.813
+      },
+      "care": {
+        "runs": 1000,
+        "moves": 7091,
+        "avgValidMoves": 12.028204766605556,
+        "lowValidShare": 0.0023974051614722887,
+        "shufflesPer25": 0.0035255958256945425,
+        "specialsPerMove": 0.5844027640671273,
+        "specialWithin10": 0.984,
+        "avgDepth": 1.7400930757297983,
+        "deepShare": 0.18967705542236638,
+        "winRate": 0.894
+      }
+    },
+    {
+      "id": "C08",
+      "tier": 2,
+      "moves": 13,
+      "items": [
+        {
+          "crop": "tomato",
+          "count": 10
+        }
+      ],
+      "none": {
+        "runs": 1000,
+        "moves": 9646,
+        "avgValidMoves": 11.903172299398715,
+        "lowValidShare": 0.000725689404934688,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.5661414057640473,
+        "specialWithin10": 0.996,
+        "avgDepth": 1.7036077130416754,
+        "deepShare": 0.17644619531411984,
+        "winRate": 0.78
+      },
+      "care": {
+        "runs": 1000,
+        "moves": 8436,
+        "avgValidMoves": 11.905405405405405,
+        "lowValidShare": 0.000474158368895211,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.5573731626363205,
+        "specialWithin10": 0.992,
+        "avgDepth": 1.6857515410146988,
+        "deepShare": 0.16939307728781414,
+        "winRate": 0.861
+      }
+    },
+    {
+      "id": "C09",
+      "tier": 3,
+      "moves": 20,
+      "items": [
+        {
+          "crop": "eggplant",
+          "count": 18
+        },
+        {
+          "crop": "blueberry",
+          "count": 15
+        }
+      ],
+      "none": {
+        "runs": 1000,
+        "moves": 17060,
+        "avgValidMoves": 11.970457209847597,
+        "lowValidShare": 0.001406799531066823,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.5889214536928488,
+        "specialWithin10": 0.995,
+        "avgDepth": 1.7355216881594373,
+        "deepShare": 0.18411488862837044,
+        "winRate": 0.662
+      },
+      "care": {
+        "runs": 1000,
+        "moves": 15929,
+        "avgValidMoves": 12.044321677443657,
+        "lowValidShare": 0.00200891455835269,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.5891141942369263,
+        "specialWithin10": 0.995,
+        "avgDepth": 1.7245275911858873,
+        "deepShare": 0.18055119593194802,
+        "winRate": 0.773
+      }
+    },
+    {
+      "id": "C10",
+      "tier": 3,
+      "moves": 12,
+      "items": [
+        {
+          "crop": "corn",
+          "count": 10
+        },
+        {
+          "crop": "tomato",
+          "count": 8
+        }
+      ],
+      "none": {
+        "runs": 1000,
+        "moves": 10042,
+        "avgValidMoves": 12.012348137821151,
+        "lowValidShare": 0.0011949810794662419,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.592212706632145,
+        "specialWithin10": 0.998,
+        "avgDepth": 1.7424815773750248,
+        "deepShare": 0.18243377813184625,
+        "winRate": 0.646
+      },
+      "care": {
+        "runs": 1000,
+        "moves": 9088,
+        "avgValidMoves": 12.05787852112676,
+        "lowValidShare": 0.0007702464788732394,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.5799955985915493,
+        "specialWithin10": 0.997,
+        "avgDepth": 1.7330545774647887,
+        "deepShare": 0.1814480633802817,
+        "winRate": 0.793
+      }
+    },
+    {
+      "id": "C11",
+      "tier": 3,
+      "moves": 14,
+      "items": [
+        {
+          "crop": "carrot",
+          "count": 12
+        }
+      ],
+      "none": {
+        "runs": 1000,
+        "moves": 10879,
+        "avgValidMoves": 11.762753929589117,
+        "lowValidShare": 0.001838404265097895,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.5680669179152495,
+        "specialWithin10": 0.998,
+        "avgDepth": 1.7079694824891993,
+        "deepShare": 0.1753837668903392,
+        "winRate": 0.701
+      },
+      "care": {
+        "runs": 1000,
+        "moves": 9936,
+        "avgValidMoves": 11.897644927536232,
+        "lowValidShare": 0.002113526570048309,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.5569645732689211,
+        "specialWithin10": 0.998,
+        "avgDepth": 1.6877012882447664,
+        "deepShare": 0.17059178743961353,
+        "winRate": 0.808
+      }
+    },
+    {
+      "id": "C12",
+      "tier": 3,
+      "moves": 16,
+      "items": [
+        {
+          "crop": "eggplant",
+          "count": 13
+        },
+        {
+          "crop": "corn",
+          "count": 13
+        }
+      ],
+      "none": {
+        "runs": 1000,
+        "moves": 13686,
+        "avgValidMoves": 12.017243898874762,
+        "lowValidShare": 0.0018997515709484145,
+        "shufflesPer25": 0,
+        "specialsPerMove": 0.5877539091041941,
+        "specialWithin10": 0.992,
+        "avgDepth": 1.7210287885430366,
+        "deepShare": 0.17864971503726434,
+        "winRate": 0.632
+      },
+      "care": {
+        "runs": 1000,
+        "moves": 12608,
+        "avgValidMoves": 11.914102157360405,
+        "lowValidShare": 0.002458756345177665,
+        "shufflesPer25": 0.0019828680203045684,
+        "specialsPerMove": 0.5839942893401016,
+        "specialWithin10": 0.996,
+        "avgDepth": 1.7345336294416243,
+        "deepShare": 0.18527918781725888,
+        "winRate": 0.769
+      }
+    }
+  ]
+}
