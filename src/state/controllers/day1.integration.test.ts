@@ -43,6 +43,40 @@ function refreshKeepsGate(): void {
   if (useAppStore.getState().app === 'brief') gameController.closeBrief();
 }
 
+/**
+ * Refresh in the middle of a match. Runs are never saved (02 §12.4), so the reload returns to the last safe
+ * point — the save written when the run started — on the same gate, with the attempt not counted.
+ */
+async function refreshMidMatch(): Promise<void> {
+  gameController.arrived();
+  const run = useRunStore.getState().run!;
+  const { id, attempts } = run.commission;
+  const g = COMMISSION_BY_ID[id]?.guidedMoves?.[0];
+  runController.commit(g && attempts === 0 ? { a: { x: g.a[0], y: g.a[1] }, b: { x: g.b[0], y: g.b[1] } } : pickHint(run, gameCfg())!.move);
+  await flush();
+  expect(useAppStore.getState().app).toBe('match');
+  const before = gate();
+  useRunStore.setState({ run: null, phase: 'ended', selected: null, preview: null, guide: null });
+  useAppStore.setState({ app: 'title', home: null, settlement: null });
+  expect(gameController.continueGame()).toBe(true);
+  expect(gate()).toBe(before);
+  const active = useAppStore.getState().home!.commissions.active!;
+  expect(active.id).toBe(id);
+  expect(active.attempts).toBe(attempts);
+  if (before === 'G0') {
+    // No hub actions at G0: the reload drops straight back into a fresh, guided T1.
+    expect(useAppStore.getState().app).toBe('toMatch');
+    expect(useRunStore.getState().run!.moveIndex).toBe(0);
+    expect(useRunStore.getState().guide).not.toBeNull();
+  } else {
+    expect(useAppStore.getState().app).toBe('hub');
+    expect(allow()).toContain('openCommission');
+    gameController.openBrief();
+    gameController.startRun();
+    expect(useRunStore.getState().run!.commission.id).toBe(id);
+  }
+}
+
 async function playOut(win: boolean): Promise<void> {
   gameController.arrived();
   for (let guard = 0; guard < 60 && useAppStore.getState().app === 'match'; guard++) {
@@ -67,6 +101,7 @@ describe('day 1 flow and gates (P1-27, 02 §11.1)', () => {
     gameController.newGame(8);
     expect(gate()).toBe('G0');
     expect(allow()).toEqual([]);
+    await refreshMidMatch();
     await playOut(true);
 
     expect(gate()).toBe('G1');
@@ -82,6 +117,7 @@ describe('day 1 flow and gates (P1-27, 02 §11.1)', () => {
     expect(tipIds()).toContain('onlyRipe');
     gameController.startRun();
     expect(gate()).toBe('G2');
+    await refreshMidMatch();
     await playOut(true);
 
     expect(gate()).toBe('G3');
@@ -100,8 +136,10 @@ describe('day 1 flow and gates (P1-27, 02 §11.1)', () => {
 
     expect(gate()).toBe('G4');
     expect(allow()).toEqual(['openCommission', 'water', 'bee']);
+    refreshKeepsGate();
     gameController.openBrief();
     gameController.startRun();
+    await refreshMidMatch();
     await playOut(true);
 
     expect(gate()).toBe('G5');
