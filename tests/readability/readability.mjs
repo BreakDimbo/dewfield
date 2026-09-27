@@ -26,17 +26,32 @@ const browser = await chromium.launch({
 const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 1 });
 const H = (fn, ...a) => page.evaluate(([f, a]) => window.__DEWFIELD__[f](...a), [fn, a]);
 await page.goto(`http://localhost:5391/?e2e=1&seed=1`);
-await page.evaluate(() => localStorage.clear());
+// Hold the camera and resolution still: reduced motion turns off idle drift/parallax, and a locked quality tier
+// stops the auto-downgrade (which fires constantly at software-GL frame rates) from changing the DPR mid-test.
+await page.evaluate(() => {
+  localStorage.clear();
+  localStorage.setItem(
+    'dewfield:settings',
+    JSON.stringify({ schemaVersion: 1, volume: { master: 0, music: 0, sfx: 0 }, reducedMotion: true, quality: 'high' }),
+  );
+});
 await page.reload();
 await page.waitForTimeout(1500);
 await page.getByRole('button', { name: /开始/ }).click();
-for (let i = 0; i < 80 && (await H('getState')).app !== 'match'; i++) await page.waitForTimeout(250);
+// Software GL can run at ~1 fps: the camera tween and instance updates are frame-driven, so wait in frames.
+for (let i = 0; i < 480 && (await H('getState')).app !== 'match'; i++) await page.waitForTimeout(250);
+if ((await H('getState')).app !== 'match') throw new Error('match camera never arrived');
+const frames = async (n) => {
+  const t0 = await page.evaluate(() => new Promise((r) => requestAnimationFrame(r)).then(() => performance.now()));
+  for (let k = 1; k < n; k++) await page.evaluate(() => new Promise((r) => requestAnimationFrame(r)));
+  return t0;
+};
 await H('loadRun', ascii(board()));
 await page.waitForTimeout(1500);
 
 async function sample(b) {
   await H('showBoard', ascii(b));
-  await page.waitForTimeout(700);
+  await frames(3);
   const feats = await H('readCells', GRID);
   return feats.map((f, i) => ({ f, label: b[Math.floor(i / 7)][i % 7] }));
 }

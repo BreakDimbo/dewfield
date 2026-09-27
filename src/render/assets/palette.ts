@@ -29,32 +29,33 @@ const SPROUT_TINT = new Color('#A9CB8C');
 
 const LADDER_STEP = 0.07;
 
-/** Raise sRGB lightness until the colour's luma clears `floor` (keeps hue and saturation). */
+/** Raise lightness until the colour's luma clears `floor` (keeps hue and saturation). */
 function liftAbove(c: Color, floor: number): Color {
-  c.getHSL(tmp, SRGBColorSpace);
+  c.getHSL(tmp);
   const { h, s } = tmp;
   let l = tmp.l;
   while (luminance(c) < floor && l < 1) {
     l = Math.min(1, l + 0.01);
-    c.setHSL(h, s, l, SRGBColorSpace);
+    c.setHSL(h, s, l);
   }
   return c;
 }
 
 /**
- * RD-2: unripe −35% saturation; sprouts paler still. Each step is also lifted so the three stages differ by
+ * RD-2: unripe −35% saturation and +0.15 lightness; sprouts −45% and +0.30, tinted young green
+ * (readability-greybox.md round 2). Each step is also lifted so the three stages differ by
  * at least LADDER_STEP in greyscale luma — needed for bright hues (corn) where desaturation alone darkens.
  */
 export function stageColor(hex: string, stage: Stage): Color {
   const ripe = new Color(hex);
   if (stage === 2) return ripe;
-  ripe.getHSL(tmp, SRGBColorSpace);
+  ripe.getHSL(tmp);
   const base = { ...tmp };
-  const unripe = new Color().setHSL(base.h, base.s * 0.65, Math.min(1, base.l + 0.04), SRGBColorSpace);
+  const unripe = new Color().setHSL(base.h, base.s * 0.65, Math.min(1, base.l + 0.15));
   liftAbove(unripe, luminance(ripe) + LADDER_STEP);
   if (stage === 1) return unripe;
   const sprout = new Color()
-    .setHSL(base.h, base.s * 0.55, Math.min(1, base.l + 0.05), SRGBColorSpace)
+    .setHSL(base.h, base.s * 0.55, Math.min(1, base.l + 0.3))
     .lerp(SPROUT_TINT, 0.22);
   return liftAbove(sprout, luminance(unripe) + LADDER_STEP);
 }
