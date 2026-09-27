@@ -78,7 +78,8 @@ VITE_BASE=/dewfield/ pnpm build   # 部署到子路径
 | 命令 | 作用 |
 |---|---|
 | `pnpm sim --mode single --bot greedy --commission C01 --runs 500 --seed 1` | 平衡模拟（02 §15）；`--mode campaign`、`--care waterOrdered`、`--vs`、`--out f.json` |
-| `pnpm tsx tools/sim/tune.ts 200` | 按档位区间搜索委托数量（P1-26 / P2-23） |
+| `pnpm tsx tools/sim/audit.ts --runs 1000 --seed 1 [--vs]` | 全部委托 × 不照料/照料的胜率与 02 §5.7 区间对照；`--set`、`--def` 临时覆盖调参与委托 |
+| `pnpm tsx tools/sim/tune.ts --runs 800 --ids C04` | 按档位区间搜索委托步数与数量（P1-26 / P2-23） |
 | `pnpm kpi export.json …` | 从调试面板导出的遥测生成 K1–K6 报告 |
 | `pnpm assets:audio` | 重新合成音效精灵与音乐（需要 ffmpeg） |
 | `pnpm assets:font` | 重新生成展示字体子集（缺字报错，超 150 KB 报错） |
