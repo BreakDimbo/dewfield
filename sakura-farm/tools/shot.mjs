@@ -55,6 +55,7 @@ try {
   const q = new URLSearchParams({ shot: '1', w: String(W), h: String(H), t: String(args.t || 0), q: args.q || 'high' });
   if (args.only) q.set('only', args.only);
   if (args.batch) q.set('batch', args.batch);
+  if (args.demo) q.set('demo', args.demo); // sakura-farm showcase states (src/game/controller.js demoState)
   q.set('cam', cams[0]);
   await page.goto(`http://127.0.0.1:${port}/index.html?${q}`, { waitUntil: 'load', timeout: 120000 });
   await page.waitForFunction('window.__ready === true', { timeout: 280000, polling: 250 });

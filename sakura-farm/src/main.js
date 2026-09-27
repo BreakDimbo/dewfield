@@ -8,6 +8,7 @@ import { Player } from './core/player.js';
 import { batchStatic } from './core/batch.js';
 import { batchStatic as batchStatic2 } from './core/batch2.js';
 import { createAudio } from './core/audio.js';
+import { createGame } from './game/controller.js';
 
 export const MODULES = [
   'environment', 'street', 'poles', 'railway', 'station', 'plaza', 'shopsA', 'shopsB', 'houses', 'farm',
@@ -49,6 +50,11 @@ const audio = createAudio();
 const ctx = createContext({ scene, camera, renderer, audio, quality, sunDir });
 ctx.sky = sky;
 window.__ctx = ctx; window.THREE = THREE;
+// sakura-farm: the game state lives outside the scene; world modules read ctx.services.game (farm, trees).
+const store = (() => { try { return localStorage; } catch (e) { return null; } })();
+const game = createGame({ storage: store, demo: params.get('demo') });
+ctx.services.game = game;
+window.__game = game;
 
 function resize() {
   const w = SHOT ? Number(params.get('w') || 1280) : innerWidth, h = SHOT ? Number(params.get('h') || 720) : innerHeight;
