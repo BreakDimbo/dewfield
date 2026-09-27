@@ -33,7 +33,11 @@ export default defineConfig({
       output: {
         codeSplitting: {
           groups: [
-            { name: 'vendor-three', test: /node_modules[\\/](three|@react-three|maath)[\\/]/ },
+            // three's glTF loader + meshopt decoder stay in their own lazy chunk (03 §14: only fetched for `ART = 'glb'`).
+            {
+              name: 'vendor-three',
+              test: /node_modules[\\/](three(?![\\/]examples[\\/]jsm[\\/](loaders|libs)[\\/])|@react-three|maath)[\\/]/,
+            },
             { name: 'vendor-react', test: /node_modules[\\/](react|react-dom|scheduler|zustand)[\\/]/ },
           ],
         },

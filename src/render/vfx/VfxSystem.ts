@@ -19,7 +19,8 @@ import type { HarvestItem } from '@/core/board/events';
 import type { Pos, SpecialKind } from '@/core/board/model';
 import { CROP_BY_ID } from '@/core/config/crops';
 import type { ComboKind, VfxAdapter } from '@/render/choreo/builder';
-import { bandTexture, beeGeometry, glowTexture, sparkTexture } from '@/render/assets/greybox';
+import { bandTexture, glowTexture, sparkTexture } from '@/render/assets/greybox';
+import { geometryOf, manifest } from '@/render/assets/manifest';
 import { PAL } from '@/render/assets/palette';
 import { cellX, cellZ } from '@/render/field/layout';
 
@@ -100,7 +101,7 @@ export class VfxSystem implements VfxAdapter {
     this.rings.setColorAt(0, tmpC.set(0));
     this.sparks = inst(new PlaneGeometry(1, 1), additive(), maxParticles, 5);
     this.sparks.setColorAt(0, tmpC.set(0));
-    this.beeMesh = inst(beeGeometry(), litMaterial, 64, 0);
+    this.beeMesh = inst(geometryOf(manifest.bee()), litMaterial, 64, 0);
     this.blades = inst(
       new TorusGeometry(0.42, 0.05, 6, 24, Math.PI * 1.2),
       new MeshStandardMaterial({ color: '#EEF2F2', metalness: 0.55, roughness: 0.22, emissive: '#7A6A3E', emissiveIntensity: 0.45 }),
