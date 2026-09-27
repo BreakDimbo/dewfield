@@ -1,4 +1,4 @@
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -217,11 +217,31 @@ const SFX: Record<string, () => Buf> = {
   },
 };
 
+/** 01 §14 ambience: morning birdsong, dusk crickets — quiet, sparse, inside the loop so it wraps cleanly. */
+function ambience(b: Buf, len: number, kind: 'morning' | 'dusk') {
+  if (kind === 'morning') {
+    for (let at = 1.3; at < len - 1; at += 2.5 + rnd() * 4) {
+      const f0 = 2600 + rnd() * 1400;
+      const notes = 2 + Math.floor(rnd() * 3);
+      for (let k = 0; k < notes; k++) {
+        const up = rnd() < 0.5;
+        add(b, at + k * 0.13, (t) => env(t, 0.004, 0.035) * sine(f0 * (up ? 1 + t * 6 : 1.3 - t * 6), t), 0.1, 0.03);
+      }
+    }
+  } else {
+    for (let at = 0.7; at < len - 1; at += 1.1 + rnd() * 1.6) {
+      const f = 4200 + rnd() * 600;
+      for (let k = 0; k < 3; k++) add(b, at + k * 0.055, (t) => env(t, 0.002, 0.012) * sine(f, t) * sine(35, t), 0.04, 0.02);
+    }
+  }
+}
+
 /** Seamless loops: the tail wraps onto the head so the reverb doesn't click at the loop point. */
 function music(kind: 'morning' | 'dusk' | 'match'): Buf {
   const bpm = kind === 'match' ? 92 : kind === 'dusk' ? 66 : 78;
   const beat = 60 / bpm;
-  const bars = kind === 'match' ? 16 : 12;
+  // 01 §14: 60–90 s seamless loops (morning ≈ 62 s, dusk ≈ 73 s, match ≈ 63 s).
+  const bars = kind === 'match' ? 24 : 20;
   const len = bars * 4 * beat;
   const b = buf(len + 3);
   const prog: number[][] =
@@ -245,7 +265,10 @@ function music(kind: 'morning' | 'dusk' | 'match'): Buf {
       else pluck(b, at, st(note), 0.16, 1.4);
     }
     if (kind === 'match') for (let k = 0; k < 8; k++) noise(b, t0 + (k * beat) / 2, 0.03, k % 2 ? 0.04 : 0.07, () => 0.8);
+    // Glass-chime accent (01 §14) at the top of every phrase.
+    if (bar % 4 === 0) [24, 28, 31].forEach((s, i) => add(b, t0 + i * 0.09, (t) => env(t, 0.001, 0.9) * sine(st(s + chord[0]!), t), 2, 0.035));
   }
+  if (kind !== 'match') ambience(b, len, kind);
   const wet = reverb(b, 0.25);
   const n = Math.floor(len * SR);
   const loop = wet.slice(0, n);
@@ -271,9 +294,19 @@ function wav(path: string, b: Buf) {
   writeFileSync(path, data);
 }
 
-function encode(src: string, dst: string) {
-  const webm = ['-y', '-loglevel', 'error', '-i', src, '-c:a', 'libopus', '-b:a', '96k', `${dst}.webm`];
-  const mp3 = ['-y', '-loglevel', 'error', '-i', src, '-c:a', 'libmp3lame', '-b:a', '128k', `${dst}.mp3`];
+/** Integrated loudness (LUFS) via ffmpeg's EBU R128 analysis. */
+function loudness(src: string): number {
+  const r = spawnSync('ffmpeg', ['-hide_banner', '-nostats', '-i', src, '-af', 'loudnorm=print_format=json', '-f', 'null', '-'], { encoding: 'utf8' });
+  const json = /\{[\s\S]*\}/.exec(r.stderr)?.[0];
+  if (!json) throw new Error('loudness analysis failed');
+  return Number((JSON.parse(json) as { input_i: string }).input_i);
+}
+
+/** `targetLufs`: one static gain for the whole file (03 §14 music ≈ −16 LUFS) — a dynamic normaliser would break the loop seam. */
+function encode(src: string, dst: string, targetLufs?: number) {
+  const gain = targetLufs === undefined ? [] : ['-af', `volume=${(targetLufs - loudness(src)).toFixed(2)}dB,alimiter=limit=0.95`];
+  const webm = ['-y', '-loglevel', 'error', '-i', src, ...gain, '-c:a', 'libopus', '-b:a', '96k', `${dst}.webm`];
+  const mp3 = ['-y', '-loglevel', 'error', '-i', src, ...gain, '-c:a', 'libmp3lame', '-b:a', '128k', `${dst}.mp3`];
   execFileSync('ffmpeg', webm);
   execFileSync('ffmpeg', mp3);
 }
@@ -298,7 +331,7 @@ encode(join(TMP, 'sfx.wav'), join(OUT, 'sfx'));
 writeFileSync(join(OUT, 'sfx.json'), JSON.stringify({ sprite: map }, null, 2) + '\n');
 for (const kind of ['morning', 'dusk', 'match'] as const) {
   wav(join(TMP, `${kind}.wav`), music(kind));
-  encode(join(TMP, `${kind}.wav`), join(OUT, 'music', kind));
+  encode(join(TMP, `${kind}.wav`), join(OUT, 'music', kind), -16);
 }
 rmSync(TMP, { recursive: true, force: true });
 console.log(`sfx: ${parts.length} cues; music: 3 loops → ${OUT}`);

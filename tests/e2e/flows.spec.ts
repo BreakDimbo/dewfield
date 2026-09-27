@@ -67,8 +67,9 @@ test('② a failed commission keeps partial delivery; the retry shows what is le
   await expect(page.getByText(/还差 \d+ 个，交了的都算数/)).toBeVisible();
   await backToTerrace(page);
   await page.getByRole('button', { name: '委托' }).click();
-  if (delivered > 0) await expect(page.getByText(`${delivered} / 30`)).toBeVisible();
-  else await expect(page.getByText('× 30')).toBeVisible();
+  // The greedy hint targets the order, so two moves always deliver something; retention is really tested.
+  expect(delivered).toBeGreaterThan(0);
+  await expect(page.getByText(`${delivered} / 30`)).toBeVisible();
 });
 
 test('③ buying the wind chime gives +1 move on the next run', async ({ page }) => {

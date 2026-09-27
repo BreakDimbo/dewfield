@@ -16,9 +16,21 @@ const initialGz = initial.reduce((s, x) => s + x.gz, 0);
 const firstScene = files.filter((x) => !x.f.startsWith('audio/music') && !/leva|DebugPanel|bench/.test(x.f)).reduce((s, x) => s + x.size, 0);
 const kb = (n) => `${(n / 1024).toFixed(0)} KB`;
 
+const up = (url) => fetch(url).then((r) => r.ok, () => false);
+const waitUp = async (url) => {
+  for (let i = 0; i < 120 && !(await up(url)); i++) await new Promise((r) => setTimeout(r, 500));
+  if (!(await up(url))) throw new Error(`server did not start: ${url}`);
+};
 const server = spawn('node', ['scripts/serve.mjs'], { env: { ...process.env, PORT: '5393' }, stdio: 'ignore' });
-await new Promise((r) => setTimeout(r, 800));
-const browser = await chromium.launch({ args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] });
+// Draw-call sampling drives the game through the dev-only test hooks, so it needs the dev server too.
+const devServer = (await up('http://localhost:5391/')) ? null : spawn('pnpm', ['dev'], { stdio: 'ignore', detached: true });
+await waitUp('http://localhost:5393/');
+await waitUp('http://localhost:5391/');
+const MAX_FLIPS = Number(/MAX_FLIPS\s*=\s*(\d+)/.exec(readFileSync('src/render/quality.ts', 'utf8'))?.[1] ?? NaN);
+const browser = await chromium.launch({
+  args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
+  executablePath: process.env.PW_CHROMIUM_PATH || undefined,
+});
 
 const ctx = await browser.newContext({ viewport: { width: 1280, height: 800 } });
 const page = await ctx.newPage();
@@ -35,23 +47,31 @@ await cdp.send('Network.emulateNetworkConditions', { offline: false, latency: 0,
 const views = {};
 const dev = await browser.newPage({ viewport: { width: 1280, height: 800 } });
 const H = (fn, ...a) => dev.evaluate(([f, a]) => window.__DEWFIELD__[f](...a), [fn, a]);
-const sampleStats = async () => {
-  await dev.waitForTimeout(3000);
-  return dev.evaluate(() => ({ ...window.__DEWFIELD_STATS__ }));
+// Software GL runs at ~1 fps and camera tweens are frame-driven, so waits are generous and must succeed.
+const waitApp = async (name) => {
+  for (let i = 0; i < 480 && (await H('getState')).app !== name; i++) await dev.waitForTimeout(250);
+  const now = (await H('getState')).app;
+  if (now !== name) throw new Error(`expected app "${name}", still "${now}"`);
+};
+const sampleStats = async (app) => {
+  await waitApp(app);
+  await dev.waitForTimeout(8000);
+  return { app, ...(await dev.evaluate(() => ({ ...window.__DEWFIELD_STATS__ }))) };
 };
 await dev.goto('http://localhost:5391/?e2e=1&seed=3');
 await dev.evaluate(() => localStorage.clear());
 await dev.reload();
-views.title = await sampleStats();
+views.title = await sampleStats('title');
 await dev.getByRole('button', { name: '开始' }).click();
-for (let i = 0; i < 80 && (await H('getState')).app !== 'match'; i++) await dev.waitForTimeout(250);
-views.match = await sampleStats();
+views.match = await sampleStats('match');
 for (const m of [[6, 5, 6, 6], [2, 2, 2, 3], [3, 5, 2, 5]]) { await H('applyMove', ...m); await H('skipAnimations'); await dev.waitForTimeout(300); }
-for (let i = 0; i < 80 && (await H('getState')).app !== 'settlement'; i++) await dev.waitForTimeout(250);
+await waitApp('settlement');
 await H('closeSettlement');
-for (let i = 0; i < 80 && (await H('getState')).app !== 'hub'; i++) await dev.waitForTimeout(250);
-await H('patchHome', { decor: { owned: ['windChime', 'planters', 'awning', 'beehive', 'bench', 'irrigation', 'glassMobile', 'dewLanterns'] } });
-views.hub = await sampleStats();
+await waitApp('hub');
+const home = await H('home');
+await H('patchHome', { decor: { ...home.decor, owned: ['windChime', 'planters', 'awning', 'beehive', 'bench', 'irrigation', 'glassMobile', 'dewLanterns'] } });
+views.hub = await sampleStats('hub');
+console.error(JSON.stringify(views));
 
 const bench = await ctx.newPage();
 const logs = [];
@@ -61,6 +81,7 @@ for (let i = 0; i < 60 && !logs.some((l) => l.startsWith('[bench]')); i++) await
 const line = logs.find((l) => l.startsWith('[bench]')) ?? '[bench] n/a';
 await browser.close();
 server.kill();
+if (devServer) process.kill(-devServer.pid);
 
 const md = `# 性能报告（P2-21）
 
@@ -94,7 +115,15 @@ const md = `# 性能报告（P2-21）
 
 \`${line}\`
 
-- 这是 **SwiftShader 纯 CPU 软件渲染** 的下限数据，不代表 GPU 设备；参考设备（核显笔记本、iPad A13）的实机测量需要真机，本环境无法提供，列为等价验收：以 draw call / 三角形 / 体积三项硬预算全部达标 + 自动降级（\`render/quality.ts\`：DPR 2 → 1.5 → 1 → 粒子减半，最多 ${4} 次切换防抖，单测覆盖）作为替代证据。
+- 这是 **SwiftShader 纯 CPU 软件渲染** 的数据，不代表 GPU 设备，不能用来判断 P2-21 验收 1（≥ 55 fps、p95 ≤ 22 ms）。
+- **待真机测量**：在核显笔记本与 iPad（A13）上分别打开 \`?bench=1\`（标题/露台与对局各一次），把控制台 \`[bench]\` 行填入下表。未填之前 P2-21 不能勾选。
+
+| 设备 | 视图 | 平均帧时间 | p95 | 结论 |
+|---|---|---|---|---|
+| 核显笔记本 | 露台 / 对局 | 待测 | 待测 | — |
+| iPad A13 | 露台 / 对局 | 待测 | 待测 | — |
+
+- 自动降级（\`render/quality.ts\`：DPR 2 → 1.5 → 1 → 粒子减半，最多 ${MAX_FLIPS} 次切换后锁定防抖）有单测覆盖。
 - 降级与恢复：drei \`PerformanceMonitor\`（bounds 45–58 fps）驱动 \`qualityStep\`；设置中的“高 / 低”直接锁定档位。
 `;
 writeFileSync('docs/balance/perf-report.md', md);

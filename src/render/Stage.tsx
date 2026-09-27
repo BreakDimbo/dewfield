@@ -47,6 +47,7 @@ function Quality() {
 export function Stage() {
   useEffect(() => {
     mounts.canvas++;
+    mounts.canvasEver++;
     return () => {
       mounts.canvas--;
     };

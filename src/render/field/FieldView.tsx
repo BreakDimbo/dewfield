@@ -17,7 +17,6 @@ import { cellX, cellZ } from './layout';
 import { PreviewOverlay } from './PreviewOverlay';
 import { TilePool } from './TilePool';
 
-
 const camQ = new Quaternion();
 
 const proj = new Vector3();
@@ -34,6 +33,7 @@ export function FieldView() {
 
   useEffect(() => {
     mounts.field++;
+    mounts.fieldEver++;
     fieldRuntime.current = runtime;
     const { home } = useAppStore.getState();
     const run = useRunStore.getState().run;
@@ -83,7 +83,7 @@ export function FieldView() {
   });
 
   return (
-    <group>
+    <group userData={{ field: true }}>
       <primitive object={plots} />
       <primitive object={runtime.pool.group} />
       <primitive object={runtime.vfx.group} />

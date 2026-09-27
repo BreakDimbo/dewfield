@@ -2,7 +2,7 @@ import { Quaternion } from 'three';
 import { pickHint } from '@/core/board/hint';
 import { parseBoard, printBoard } from '@/core/board/ascii';
 import type { Move } from '@/core/board/model';
-import { fieldRuntime, photoApi, renderStats } from '@/render/runtime';
+import { fieldRuntime, mounts, occlusionProbe, photoApi, renderStats } from '@/render/runtime';
 import { useAppStore } from '@/state/appStore';
 import { gameController } from '@/state/controllers/gameController';
 import { runController } from '@/state/controllers/runController';
@@ -38,6 +38,10 @@ declare global {
       readCells: (grid: [number, number]) => Promise<number[][]>;
       synthReview: (cells: number[], grid: [number, number]) => { cell: number; truth: string; lum: number[]; sil: number[] }[];
       resume: () => void;
+      mounts: () => { canvas: number; field: number; canvasEver: number; fieldEver: number };
+      photo: (watermark: string) => Promise<string | null>;
+      mismatches: () => number;
+      occluders: () => string[] | null;
     };
   }
 }
@@ -70,6 +74,10 @@ export function installTestHooks(): void {
     closeSettlement: () => gameController.closeSettlement(),
     water: (y) => gameController.waterRow(y),
     stats: () => ({ ...renderStats }),
+    mounts: () => ({ ...mounts }),
+    mismatches: () => usePresentationStore.getState().mismatches,
+    occluders: () => occlusionProbe.occluders?.() ?? null,
+    photo: async (watermark) => (await photoApi.capture?.(watermark)) ?? null,
     exportTelemetry: () => telemetry.exportJson(),
     cellScreen: (x, y) => fieldRuntime.current?.choreo.project?.({ x, y }) ?? null,
     boardRect: () => {

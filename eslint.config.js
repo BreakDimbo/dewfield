@@ -38,7 +38,7 @@ const coreBanned = [
 ];
 
 export default tseslint.config(
-  { ignores: ['dist', 'coverage', 'node_modules', 'test-results', 'playwright-report', 'docs', 'uploads'] },
+  { ignores: ['dist', 'coverage', 'node_modules', 'test-results', 'playwright-report', 'docs', 'uploads', '.claude'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
