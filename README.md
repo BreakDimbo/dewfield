@@ -35,7 +35,16 @@ npm install          # 可选：只有截图、试玩脚本等本地工具需要
 | `node tools/shot.mjs --only environment,houses,farm,sakura,trees --demo trees --cams "x,z,yaw,pitch"` | 渲染截图（需要本地 Chromium） |
 | `node tools/play.mjs tools/playscripts/day1.json` | 真实游戏模式下的脚本化试玩与截图（还有 `stall.json`、`daynight.json`） |
 
-URL 参数：`?demo=trees` / `?demo=stages`（展示用存档，不写入 localStorage）、`?time=19:30`（从指定时刻开始）、`?fly`（允许 `F` 飞行）、`?q=low|medium|high`（画质）。
+URL 参数：`?demo=trees` / `?demo=stages`（展示用存档，不写入 localStorage）、`?time=19:30`（从指定时刻开始）、`?fly`（允许 `F` 飞行）、`?q=low|medium|high`（画质，默认中）、`?drs=0`（关闭动态分辨率）。
+
+## 性能
+
+- 场景约 410 万三角形，每帧要画三遍（阴影、描边预渲染、颜色）再加泛光后期，主要压力在 GPU。
+- 默认画质为“中”。帧率低于约 42 时会自动降低渲染分辨率（最低 0.5 倍），有余量时再慢慢升回去。
+- 阴影贴图不再每帧重画：视角移动约 3 米、太阳转动，或每 3 帧（给火车、摇动的树）才更新一次。
+- 打开消消乐或睡觉卡片时，暂停 3D 渲染。
+- 农园灯笼的点光源只在“高”画质下开启；界面上叠在画面上的元素不使用背景模糊。
+- 还卡的话，在右上角选“画质：低”。按 `` ` `` 键（或加 `?stats`）在右下角显示帧率、渲染倍率、绘制调用数和三角形数。
 
 存档：`localStorage` 键 `sakurafarm.save.v1`，每 20 秒、每次操作和睡觉时写入；读不了的存档会另存一份后开始新游戏。
 

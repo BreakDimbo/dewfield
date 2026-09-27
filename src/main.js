@@ -28,9 +28,10 @@ const QUALITY = {
   medium: { name: 'medium', pixelRatio: Math.min(devicePixelRatio, 1.0), msaa: 4, shadowMap: 2048, shadowSize: 60, petals: 0.6 },
   low: { name: 'low', pixelRatio: Math.min(devicePixelRatio, 0.75), msaa: 0, shadowMap: 2048, shadowSize: 45, petals: 0.35 },
 };
-let qName = params.get('q') || (() => { try { return localStorage.getItem('sakura.q'); } catch (e) { return null; } })() || (isTouch ? 'medium' : 'high');
+let qName = params.get('q') || (() => { try { return localStorage.getItem('sakura.q'); } catch (e) { return null; } })() || 'medium'; // sakura-farm: medium by default; dynamic resolution (below) adapts further
 if (!QUALITY[qName]) qName = 'high';
 const quality = { ...QUALITY[qName] };
+let drScale = 1, drGood = 0, drWarm = 0; // dynamic resolution state (see adaptResolution)
 if (SHOT) { quality.pixelRatio = 1; }
 
 // ------------------------------------------------------------------ renderer & scene
@@ -48,6 +49,7 @@ const camera = new THREE.PerspectiveCamera(58, innerWidth / innerHeight, 0.1, 25
 const sunDir = new THREE.Vector3(...L.SUN_DIR).normalize();
 const sky = createSky(scene, sunDir, quality);
 const pipeline = createRenderPipeline(renderer, quality);
+pipeline.setShadowState(sky.shadow);
 const audio = createAudio();
 const ctx = createContext({ scene, camera, renderer, audio, quality, sunDir });
 ctx.sky = sky;
@@ -62,7 +64,7 @@ function resize() {
   const w = SHOT ? Number(params.get('w') || 1280) : innerWidth, h = SHOT ? Number(params.get('h') || 720) : innerHeight;
   renderer.setSize(w, h, !SHOT);
   camera.aspect = w / h; camera.updateProjectionMatrix();
-  pipeline.setSize(w, h, quality.pixelRatio);
+  pipeline.setSize(w, h, quality.pixelRatio * drScale);
   ctx.wires.setResolution(pipeline.size.x, pipeline.size.y);
 }
 addEventListener('resize', resize);
@@ -197,11 +199,26 @@ function hudTick(t) {
 
 // ------------------------------------------------------------------ main loop
 let started = false, last = performance.now(), fpsAcc = 0, fpsN = 0, fps = 0;
+// Dynamic resolution (sakura-farm perf): the scene is fill-rate bound (three scene passes + post), so when the
+// frame rate drops the render scale steps down, and creeps back up when there is headroom. ?drs=0 disables it.
+const DRS = !SHOT && params.get('drs') !== '0';
+function adaptResolution(f) {
+  if (!DRS || !started || document.hidden) return;
+  if (++drWarm < 6) return; // ignore the first 3 s (shader compiles, texture uploads)
+  const min = 0.5;
+  let next = drScale;
+  if (f < 42 && drScale > min) { next = Math.max(min, drScale - (f < 28 ? 0.2 : 0.1)); drGood = 0; }
+  else if (f > 57) { if (++drGood >= 6 && drScale < 1) { next = Math.min(1, drScale + 0.1); drGood = 0; } }
+  else drGood = 0;
+  if (next !== drScale) { drScale = next; drWarm = 2; resize(); }
+}
 function frame(now) {
   requestAnimationFrame(frame);
   let dt = Math.min(0.1, (now - last) / 1000); last = now;
   if (SHOT) dt = 0;
   simT += dt;
+  // An overlay (match-3, sleep / morning card) covers the scene: keep the last frame, skip the 3D work.
+  if (!SHOT && window.__farm?.busy) { last = now; return; }
   if (!SHOT) player.update(dt);
   ctx.physics.refreshDynamic();
   stepUpdates(dt, simT);
@@ -211,8 +228,8 @@ function frame(now) {
   pipeline.render(scene, camera, sunDir, simT);
   if (!SHOT) hudTick(simT);
   fpsAcc += dt; fpsN++;
-  if (fpsAcc > 0.5) { fps = fpsN / fpsAcc; fpsAcc = 0; fpsN = 0; const s = $('stats'); if (s && !s.hidden) s.textContent = `${fps.toFixed(0)} fps · ${renderer.info.render.calls} calls · ${(renderer.info.render.triangles / 1e6).toFixed(2)}M tris`; }
-  stats.fps = fps; stats.calls = renderer.info.render.calls; stats.triangles = renderer.info.render.triangles;
+  if (fpsAcc > 0.5) { fps = fpsN / fpsAcc; fpsAcc = 0; fpsN = 0; adaptResolution(fps); const s = $('stats'); if (s && !s.hidden) s.textContent = `${fps.toFixed(0)} fps · ${(drScale * quality.pixelRatio).toFixed(2)}x · ${renderer.info.render.calls} calls · ${(renderer.info.render.triangles / 1e6).toFixed(2)}M tris`; }
+  stats.fps = fps; stats.drScale = drScale; stats.calls = renderer.info.render.calls; stats.triangles = renderer.info.render.triangles;
 }
 
 function start() {

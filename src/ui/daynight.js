@@ -15,7 +15,8 @@ const HEMI_SKY = C('#a9b3ee'), HEMI_GROUND = C('#d9c6c8'), HEMI_NIGHT_SKY = C('#
 export function startDayNight(ctx, { sky, sunDir, game, pipeline }) {
   const farm = ctx.services.farm;
   const lampBase = farm?.lampMaterial?.color.clone();
-  const points = (farm?.lamps ?? []).map((m) => {
+  // real point lights only on high quality: every lit material in the town pays for each light per pixel
+  const points = (ctx.quality?.name === 'high' ? farm?.lamps ?? [] : []).map((m) => {
     const l = new THREE.PointLight('#ffcf8a', 0, 9, 1.6);
     m.updateWorldMatrix(true, false);
     m.getWorldPosition(l.position);

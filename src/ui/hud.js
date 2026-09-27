@@ -4,6 +4,10 @@ import { SPECIES, SPECIES_BY_ID, TOOLS, STAGE_NAMES } from '../game/data.js';
 import { formatTime } from '../game/clock.js';
 import { ICONS } from './icons.js';
 
+/** Set innerHTML / textContent only when it differs (render() runs about once per game minute). */
+const setHTML = (e, html) => { if (e._h !== html) { e._h = html; e.innerHTML = html; } };
+const setText = (e, t) => { if (e.textContent !== t) e.textContent = t; };
+
 const el = (tag, cls, html) => {
   const e = document.createElement(tag);
   if (cls) e.className = cls;
@@ -36,6 +40,7 @@ export function createHud(root = document.body) {
     return b;
   });
 
+  let lastPrompt = null;
   const hud = {
     el: wrap,
     tool: 'hoe',
@@ -43,10 +48,10 @@ export function createHud(root = document.body) {
     render(game) {
       const s = game.state;
       const inv = s.inventory;
-      $('.fh-date').textContent = `第 ${s.day} 天`;
-      $('.fh-time').textContent = formatTime(s.minute);
-      $('.fh-wx').innerHTML = s.minute >= 19 * 60 ? ICONS.moon : s.weather === 'rain' ? ICONS.rain : ICONS.sun;
-      $('.fh-tix-n').textContent = `${s.tickets}`;
+      setText($('.fh-date'), `第 ${s.day} 天`);
+      setText($('.fh-time'), formatTime(s.minute));
+      setHTML($('.fh-wx'), s.minute >= 19 * 60 ? ICONS.moon : s.weather === 'rain' ? ICONS.rain : ICONS.sun);
+      setText($('.fh-tix-n'), `${s.tickets}`);
       const seed = SPECIES_BY_ID[game.seed];
       const counts = {
         hoe: '',
@@ -58,22 +63,26 @@ export function createHud(root = document.body) {
       };
       slots.forEach((b) => {
         const id = b.dataset.tool;
-        b.querySelector('.fh-ico').innerHTML = id === 'seeds' ? ICONS.seeds(seed.color) : ICONS[id];
-        b.querySelector('.fh-n').textContent = counts[id] === '' ? '' : `${counts[id]}`;
+        setHTML(b.querySelector('.fh-ico'), id === 'seeds' ? ICONS.seeds(seed.color) : ICONS[id]);
+        setText(b.querySelector('.fh-n'), counts[id] === '' ? '' : `${counts[id]}`);
         b.classList.toggle('on', id === hud.tool);
         b.classList.toggle('empty', counts[id] === 0);
-        if (id === 'seeds') b.querySelector('.fh-name').textContent = `${seed.name}的种子`;
+        if (id === 'seeds') setText(b.querySelector('.fh-name'), `${seed.name}的种子`);
       });
       const pick = $('.fh-seedpick');
       pick.hidden = hud.tool !== 'seeds';
-      pick.innerHTML = SPECIES.map((sp) => `<span class="${sp.id === game.seed ? 'on' : ''} ${inv.seeds[sp.id] ? '' : 'none'}" style="--c:${sp.color}">${sp.name}<i>${inv.seeds[sp.id]}</i></span>`).join('') + '<em>R / 滚轮 切换</em>';
+      setHTML(pick, SPECIES.map((sp) => `<span class="${sp.id === game.seed ? 'on' : ''} ${inv.seeds[sp.id] ? '' : 'none'}" style="--c:${sp.color}">${sp.name}<i>${inv.seeds[sp.id]}</i></span>`).join('') + '<em>R / 滚轮 切换</em>');
       if (!$('.fh-panel').hidden) hud.renderPanel(game);
     },
     select(tool) {
       hud.tool = tool;
       hud.onSelect?.(tool);
     },
+    /** Called every frame: touches the DOM only when the prompt actually changes. */
     prompt(p) {
+      const key = p ? `${p.ok ? 1 : 0}|${p.text}|${p.sub ?? ''}` : '';
+      if (key === lastPrompt) return;
+      lastPrompt = key;
       const e = $('.fh-prompt');
       if (!p) {
         e.hidden = true;
@@ -81,8 +90,7 @@ export function createHud(root = document.body) {
       }
       e.hidden = false;
       e.classList.toggle('no', !p.ok);
-      e.innerHTML = p.ok ? `<kbd>左键</kbd><kbd>E</kbd><span>${p.text}</span>` : `<span>${p.text}</span>`;
-      if (p.sub) e.innerHTML += `<small>${p.sub}</small>`;
+      e.innerHTML = (p.ok ? `<kbd>左键</kbd><kbd>E</kbd><span>${p.text}</span>` : `<span>${p.text}</span>`) + (p.sub ? `<small>${p.sub}</small>` : '');
     },
     toast(text, kind = '') {
       const t = el('div', `fh-toast ${kind}`, text);

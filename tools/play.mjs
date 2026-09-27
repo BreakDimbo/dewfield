@@ -48,6 +48,7 @@ try {
   page.on('console', (m) => { if (m.type() === 'error') logs.push(`[console.error] ${m.text()}`); });
   const q = new URLSearchParams({ q: args.q || 'low' });
   if (args.demo) q.set('demo', args.demo);
+  q.set('drs', args.drs ?? '0'); // fixed render scale for comparable screenshots
   if (args.only) q.set('only', args.only);
   await page.goto(`http://127.0.0.1:${port}/index.html?${q}`, { waitUntil: 'load', timeout: 180000 });
   await page.evaluate(() => localStorage.removeItem('sakurafarm.save.v1'));

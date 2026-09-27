@@ -96,6 +96,12 @@ export function createSky(scene, sunDir, quality) {
   scene.fog = new THREE.FogExp2(FOG_COLOR.clone(), 0.0026);
 
   const _c = new THREE.Vector3(), _fwd = new THREE.Vector3();
+  // Shadow map re-render policy (sakura-farm perf): the map is only redrawn when the snapped shadow box moves,
+  // the sun turns noticeably, or every `dynEvery` frames so moving casters (trains, swaying trees) still update.
+  const lastBox = new THREE.Vector3(Infinity, 0, 0), lastSun = new THREE.Vector3();
+  let frame = 0;
+  const dynEvery = quality.shadowEvery || 3;
+  const shadow = { needsUpdate: true };
   function update(t, camera) {
     uniforms.uTime.value = t;
     mesh.position.copy(camera.position);
@@ -106,11 +112,21 @@ export function createSky(scene, sunDir, quality) {
     // snap in light space
     const lx = new THREE.Vector3().crossVectors(sunDir, new THREE.Vector3(0, 1, 0)).normalize();
     const ly = new THREE.Vector3().crossVectors(lx, sunDir).normalize();
-    const px = Math.round(_c.dot(lx) / texel) * texel, py = Math.round(_c.dot(ly) / texel) * texel, pz = _c.dot(sunDir);
+    // coarse snap (whole texels, ~3 m) so the map is only redrawn after the box really moves
+    const step = Math.max(1, Math.round(3 / texel)) * texel;
+    const px = Math.round(_c.dot(lx) / step) * step, py = Math.round(_c.dot(ly) / step) * step, pz = Math.round(_c.dot(sunDir) / 5) * 5;
     _c.copy(lx).multiplyScalar(px).addScaledVector(ly, py).addScaledVector(sunDir, pz);
-    sun.target.position.copy(_c);
-    sun.position.copy(_c).addScaledVector(sunDir, 260);
-    sun.target.updateMatrixWorld();
+    frame++;
+    const moved = _c.distanceToSquared(lastBox) > 1e-6;
+    const turned = sunDir.dot(lastSun) < 0.99998;
+    if (moved || turned || frame % dynEvery === 0) {
+      lastBox.copy(_c);
+      lastSun.copy(sunDir);
+      sun.target.position.copy(_c);
+      sun.position.copy(_c).addScaledVector(sunDir, 260);
+      sun.target.updateMatrixWorld();
+      shadow.needsUpdate = true;
+    }
   }
-  return { mesh, sun, hemi, uniforms, update };
+  return { mesh, sun, hemi, uniforms, update, shadow };
 }

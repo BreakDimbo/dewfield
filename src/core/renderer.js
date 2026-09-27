@@ -168,6 +168,7 @@ export function createRenderPipeline(renderer, quality) {
 
   const _v = new THREE.Vector3();
   const clearND = new THREE.Color(0.5, 0.5, 1.0);
+  let shadowState = null; // { needsUpdate } from sky.js; null = redraw the shadow map every frame
   function render(scene, camera, sunDir, t) {
     // 1. normal + depth pre-pass (outline source) — layer 0 only
     ndMat.uniforms.uFar.value = camera.far; compMat.uniforms.uFar.value = camera.far;
@@ -183,7 +184,8 @@ export function createRenderPipeline(renderer, quality) {
     scene.overrideMaterial = null; scene.background = bg; scene.fog = fog;
     // 2. colour pass — all layers
     camera.layers.enableAll();
-    renderer.shadowMap.needsUpdate = true;
+    renderer.shadowMap.needsUpdate = shadowState ? shadowState.needsUpdate : true;
+    if (shadowState) shadowState.needsUpdate = false;
     renderer.setRenderTarget(rtColor);
     renderer.setClearColor(0xdde9f3, 1.0);
     renderer.clear();
@@ -211,5 +213,5 @@ export function createRenderPipeline(renderer, quality) {
     pass(compMat, null);
   }
 
-  return { render, setSize, compMat, ndMat, targets: { rtColor, rtND }, size };
+  return { render, setSize, compMat, ndMat, targets: { rtColor, rtND }, size, setShadowState: (s) => (shadowState = s) };
 }

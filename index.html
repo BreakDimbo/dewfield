@@ -51,7 +51,7 @@
   body.playing .hud { opacity: 1; }
   body.noui .hud, body.shot .hud, body.shot #intro { display: none !important; }
   #toast { top: calc(18px + env(safe-area-inset-top, 0px)); left: 18px; }
-  #toast .sign { background: var(--glass); backdrop-filter: blur(6px); border-radius: 8px; padding: 10px 16px 10px 14px; display: flex; align-items: center; gap: 10px;
+  #toast .sign { background: rgba(251,248,242,.93); border-radius: 8px; padding: 10px 16px 10px 14px; display: flex; align-items: center; gap: 10px;
     box-shadow: 0 6px 20px rgba(51,48,74,.14); transform: translateY(-8px); opacity: 0; transition: transform .6s, opacity .6s; border-left: 6px solid var(--line); }
   #toast.show .sign { transform: none; opacity: 1; }
   .t-name { font: 700 17px/1.2 var(--round); color: var(--navy); letter-spacing: .06em; }
