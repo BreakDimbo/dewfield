@@ -6,6 +6,16 @@ import { contextLost, occlusionProbe, photoApi } from './runtime';
 const shown = (o: Object3D | null): boolean => !o || (o.visible && shown(o.parent));
 const inField = (o: Object3D | null): boolean => !!o && (o.userData.field === true || inField(o.parent));
 
+/** Name path plus geometry type and world-space centre, so an unnamed occluder can still be found. */
+function describe(o: Object3D): string {
+  const names: string[] = [];
+  for (let p: Object3D | null = o; p; p = p.parent) if (p.name) names.unshift(p.name);
+  const c = new Vector3();
+  o.getWorldPosition(c);
+  const geo = (o as { geometry?: { type: string } }).geometry?.type ?? o.type;
+  return `${names.join('/') || o.type}:${geo}@${c.x.toFixed(1)},${c.y.toFixed(1)},${c.z.toFixed(1)}`;
+}
+
 /** Rays from the camera to a grid over the board + 0.5 cell, at soil and crop-top height (RD-6). */
 function findOccluders(scene: Object3D, camera: { position: Vector3 }): string[] {
   const ray = new Raycaster();
@@ -21,7 +31,9 @@ function findOccluders(scene: Object3D, camera: { position: Vector3 }): string[]
         ray.far = dist - 0.05;
         for (const h of ray.intersectObject(scene, true)) {
           if (!shown(h.object) || inField(h.object)) continue;
-          hits.add(h.object.name || h.object.parent?.name || h.object.type);
+          // The bed's own soil, pebbles and low rim (≤ 0.25 high, inside the board + margin) are ground, not occluders.
+          if (h.point.y <= 0.25 && Math.max(Math.abs(h.point.x), Math.abs(h.point.z)) <= 4.25) continue;
+          hits.add(describe(h.object));
         }
       }
   return [...hits];
