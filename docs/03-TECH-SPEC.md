@@ -588,7 +588,7 @@ buildTimeline(events: BoardEvent[], adapters: ChoreoAdapters, timing: AnimTunabl
   3. 每个节点只有 **1 个 primitive**（即 1 个材质槽）。
   4. 尺度与朝向与灰盒一致：+Y 向上，1 单位 = 1 格，原点在格子底面中心；作物已包含 `CROP_SCALE`（1.3）的呈现缩放。
 - **美术替换流程**：① `pnpm assets:models` 可随时从灰盒重新生成参考文件 `public/models/field.glb`（`tools/assets/export-greybox.ts` 用 GLTFExporter 导出 → optimize.mjs），可导入 Blender 作为比例和命名参考；② 美术在 Blender 中按上面的约束制作，导出 glb 到任意位置；③ `pnpm assets:optimize <导出.glb> public/models/field.glb`，报告全绿；④ `pnpm test` 中的 `tools/assets/field-glb.test.ts` 会检查 21 个节点都存在、带 `COLOR_0`；只有当文件是灰盒导出的（scene extras `source: 'greybox'`）时，才额外断言每个节点与灰盒原件的面数、包围盒、表面积和面积加权平均色一致，正式美术不受这条约束；⑤ 用 `?models=glb` 预览，确认后把 manifest 的 `ART` 改为 `'glb'`——这一行就是渲染侧唯一的 diff（04 P2-09 验收 3）。
-- **灰盒生成器**（`render/assets/greybox.ts`）：胡萝卜 = 倒置圆锥 + 小叶锥；番茄 = 压扁的球 + 星形萼；玉米 = 高圆柱 + 胶囊；茄子 = LatheGeometry 水滴；蓝莓 = 3 个小球。颜色取自 02 §16.1。
+- **程序化作物**（`render/assets/greybox.ts` + `leaves.ts`）：每种作物三个阶段各有造型（芽 = 小果 + 该作物特有的幼叶：胡萝卜羽状叶簇、番茄子叶与真叶、玉米条形叶、茄子宽卵叶、蓝莓木质小枝对生叶；青 = 果实 0.8 倍 + 较多叶；熟 = 完整果实 + 少量叶），果实在模型内另按 0.6 / 0.8 / 1 缩放，TilePool 再整体按 0.55 / 0.8 / 1 缩放。叶片是 `leafBlade()` 生成的双面曲面条带（沿长度弯曲、中脉下凹、正面深背面浅、叶尖提亮）。果体焊接顶点后算法线；部件之间的 AO 烘进顶点色；材质类别写在顶点色 alpha。颜色取自 02 §16.1（熟色 + 幼果色）。
 - **字体**：界面用系统字体栈（`"PingFang SC", "HarmonyOS Sans SC", "Microsoft YaHei", "Noto Sans SC", sans-serif`）。展示字体候选为霞鹜文楷（LXGW WenKai，OFL 授权，接入前再确认一次授权）；由 `tools/assets/subset-font.mjs` 从 `ui/strings/zh-CN.ts` 和委托文案中提取实际用到的字形，加上数字和标点，子集化为 woff2，≤ 150 KB。
 - **音频**：48 kHz 源文件，导出 webm/opus 96 kbps 与 mp3 128 kbps；音乐响度约 −16 LUFS。
 

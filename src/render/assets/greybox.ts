@@ -20,6 +20,7 @@ import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferG
 import type { CropSpecial, Stage } from '@/core/board/model';
 import type { CropId } from '@/core/config/crops';
 import { CROP_MAT, type CropMat } from '@/render/field/cropShading';
+import { leafBlade, placeLeaf, type LeafSpec } from './leaves';
 import { PAL, cropColor, leafColor } from './palette';
 
 /** 03 §14 greybox generator: one merged, vertex-coloured geometry per (crop, stage) → 1 draw call per tile. */
@@ -129,8 +130,38 @@ function shade(c: Color, k: number) {
   return c.clone().multiplyScalar(k);
 }
 
-/** P2-09 direction test: the showcase crop — tapered root, growth rings, green shoulder, feathery compound leaves. */
+/** Fruit size inside the model per stage; TilePool's STAGE_SCALE (0.55 / 0.8 / 1) scales the whole plant on top. */
+const FRUIT: Record<Stage, number> = { 0: 0.6, 1: 0.8, 2: 1 };
+/** Per-stage value, picked from [sprout, unripe, ripe]. */
+const byStage = <T>(stage: Stage, v: readonly [T, T, T]): T => v[stage];
+
+/** One curved leaf blade (leaves.ts), tagged as leaf material, placed around the plant. */
+function leaf(
+  spec: Omit<LeafSpec, 'top' | 'under'> & { stage: Stage },
+  at: [number, number, number],
+  yaw: number,
+  pitch: number,
+  roll = 0,
+) {
+  const { stage, ...rest } = spec;
+  return leafy(
+    placeLeaf(leafBlade({ ...rest, top: leafColor(stage), under: leafColor(stage, true) }), at, yaw, pitch, roll),
+  );
+}
+
+/** A thin stem from `a` to `b`. */
+function stem(a: Vector3, b: Vector3, r0: number, r1: number, col: Color, radial = 5) {
+  const dir = b.clone().sub(a);
+  const g = new CylinderGeometry(r1, r0, dir.length(), radial);
+  g.translate(0, dir.length() / 2, 0);
+  g.applyQuaternion(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), dir.normalize()));
+  g.translate(a.x, a.y, a.z);
+  return leafy(part(g, col));
+}
+
+/** Tapered root with growth rings and a green shoulder; a feathery tuft that is relatively larger when young. */
 function carrot(stage: Stage): BufferGeometry {
+  const k = FRUIT[stage];
   const body = cropColor('carrot', stage);
   const groove = shade(body, 0.86);
   const shoulder = body.clone().lerp(leafColor(stage), 0.35);
@@ -150,157 +181,211 @@ function carrot(stage: Stage): BufferGeometry {
     [0, 0.552],
   ];
   const root = new LatheGeometry(
-    profile.map(([x, y]) => new Vector2(x, y)),
-    14,
+    profile.map(([x, y]) => new Vector2(x * k, y * k)),
+    byStage(stage, [12, 16, 18]),
   );
   const pos = root.getAttribute('position');
   const v = new Vector3();
   for (let i = 0; i < pos.count; i++) {
     v.fromBufferAttribute(pos, i);
-    const ring = Math.sin(v.y * 62) > 0.7 && v.y < 0.47 ? 0.93 : 1;
-    pos.setXYZ(i, v.x * ring + 0.05 * (0.55 - v.y) ** 2, v.y, v.z * ring);
+    const y = v.y / k;
+    const ring = Math.sin(y * 62) > 0.7 && y < 0.47 ? 0.93 : 1;
+    pos.setXYZ(i, v.x * ring + 0.05 * k * (0.55 - y) ** 2, v.y, v.z * ring);
   }
+  const top = 0.03 + 0.552 * k;
   const parts: BufferGeometry[] = [
-    part(smooth(root), (p) => (p.y > 0.5 ? shoulder : Math.sin(p.y * 62) > 0.7 && p.y < 0.47 ? groove : body), {
-      p: [0, 0.03, 0],
-    }),
+    part(
+      smooth(root),
+      (p) => {
+        const y = (p.y - 0.03) / k;
+        return y > 0.5 ? shoulder : Math.sin(y * 62) > 0.7 && y < 0.47 ? groove : body;
+      },
+      { p: [0, 0.03, 0] },
+    ),
   ];
   const lc = leafColor(stage);
-  const ll = leafColor(stage, true);
-  const fronds: [number, number, number][] = [
-    [0, 0.42, 0.34],
-    [2.1, 0.32, 0.3],
-    [4.2, 0.36, 0.32],
-    [1.05, 0.12, 0.26],
-    [3.15, 0.18, 0.26],
-  ];
-  fronds.forEach(([yaw, tilt, len], f) => {
-    const dir = new Vector3(Math.sin(yaw) * Math.sin(tilt), Math.cos(tilt), Math.cos(yaw) * Math.sin(tilt));
-    const base = new Vector3(0, 0.57, 0);
-    const stem = new CylinderGeometry(0.008, 0.012, len, 5);
-    stem.translate(0, len / 2, 0);
-    const q2 = new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), dir);
-    stem.applyQuaternion(q2);
-    stem.translate(base.x, base.y, base.z);
-    parts.push(leafy(part(stem, f % 2 ? ll : lc)));
-    for (let k = 1; k <= 3; k++) {
-      const at = base.clone().addScaledVector(dir, (len * k) / 3.4);
-      for (const side of [-1, 1]) {
-        const g = new ConeGeometry(0.03, 0.11 - k * 0.012, 5, 1);
-        g.translate(0, (0.11 - k * 0.012) / 2, 0);
-        g.scale(1, 1, 0.35);
-        const out = new Vector3(Math.cos(yaw) * side, 0.9, -Math.sin(yaw) * side).normalize();
-        g.applyQuaternion(new Quaternion().setFromUnitVectors(new Vector3(0, 1, 0), out.lerp(dir, 0.35).normalize()));
-        g.translate(at.x, at.y, at.z);
-        parts.push(leafy(part(g, k % 2 ? ll : lc)));
-      }
-    }
-    const tip = new ConeGeometry(0.028, 0.1, 5, 1);
-    tip.translate(0, 0.05, 0);
-    tip.scale(1, 1, 0.35);
-    tip.applyQuaternion(q2);
+  const fronds = [
+    [0, 0.3, 0.36],
+    [2.1, 0.42, 0.32],
+    [4.2, 0.38, 0.33],
+    [1.05, 0.2, 0.28],
+    [3.15, 0.24, 0.28],
+  ].slice(0, byStage(stage, [3, 4, 5]));
+  const segs = stage === 0 ? 2 : 3;
+  const grow = byStage(stage, [1.2, 1.08, 1]);
+  for (const [yaw, tilt, len0] of fronds) {
+    const len = len0! * grow;
+    const dir = new Vector3(Math.sin(yaw!) * Math.sin(tilt!), Math.cos(tilt!), Math.cos(yaw!) * Math.sin(tilt!));
+    const base = new Vector3(0, top - 0.01, 0);
     const end = base.clone().addScaledVector(dir, len);
-    tip.translate(end.x, end.y, end.z);
-    parts.push(leafy(part(tip, ll)));
-  });
+    parts.push(stem(base, end, 0.011, 0.007, lc));
+    for (let j = 1; j <= 3; j++) {
+      const at = base.clone().addScaledVector(dir, (len * j) / 3.3);
+      for (const side of [-1, 1])
+        parts.push(
+          leaf(
+            { stage, length: 0.13 - j * 0.015, width: 0.07, shape: 'lance', curl: 0.5, fold: 0.2, segments: segs },
+            [at.x, at.y, at.z],
+            yaw! + side * 1.2,
+            0.55 + tilt!,
+          ),
+        );
+    }
+    parts.push(
+      leaf(
+        { stage, length: 0.12, width: 0.07, shape: 'lance', curl: 0.4, segments: segs },
+        [end.x, end.y, end.z],
+        yaw!,
+        tilt!,
+      ),
+    );
+  }
   return mergeCrop(parts);
 }
 
+/** Flattened, lobed fruit with a star calyx; young plants show seed leaves and a true leaf. */
 function tomato(stage: Stage): BufferGeometry {
+  const k = FRUIT[stage];
   const body = cropColor('tomato', stage);
-  const sphere = new SphereGeometry(0.25, 22, 14);
+  const sphere = stage === 0 ? new SphereGeometry(0.25, 14, 10) : new SphereGeometry(0.25, 22, 14);
   const pos = sphere.getAttribute('position');
   const v = new Vector3();
   for (let i = 0; i < pos.count; i++) {
     v.fromBufferAttribute(pos, i);
     const phi = Math.atan2(v.z, v.x);
     const lat = 1 - Math.abs(v.y) / 0.25;
-    const k = 1 + 0.06 * Math.cos(phi * 5) * lat;
+    const lobe = 1 + 0.06 * Math.cos(phi * 5) * lat;
     const dent = v.y > 0.2 ? -0.03 : 0;
-    pos.setXYZ(i, v.x * k, v.y + dent, v.z * k);
+    pos.setXYZ(i, v.x * lobe, v.y + dent, v.z * lobe);
   }
   const lc = leafColor(stage);
   const ld = shade(lc, 0.85);
-  const calyx = Array.from({ length: 5 }, (_, i) => {
-    const a = (i / 5) * Math.PI * 2 + 0.3;
-    const g = new ConeGeometry(0.034, 0.16, 4, 1);
-    g.translate(0, 0.08, 0);
-    g.scale(1, 1, 0.3);
-    g.rotateZ(-1.25);
-    g.rotateY(-a);
-    g.translate(0, 0.42, 0);
-    return leafy(part(g, i % 2 ? lc : ld));
-  });
-  return mergeCrop([
+  const fruitTop = 0.02 + 0.41 * k;
+  const parts: BufferGeometry[] = [
     tag(
       part(
         smooth(sphere),
         (p) => {
-          const hi = p.y > 0.1 && p.x < -0.05 && p.z > 0 ? 0.28 : p.y > 0.14 ? 0.12 : 0;
+          const hi = p.y > 0.1 * k && p.x < -0.05 * k && p.z > 0 ? 0.28 : p.y > 0.14 * k ? 0.12 : 0;
           return body.clone().lerp(new Color('#FFB7A0'), hi);
         },
-        { p: [0, 0.23, 0], s: [1, 0.82, 1] },
+        { p: [0, 0.23 * k, 0], s: [k, 0.82 * k, k] },
       ),
       'gloss',
     ),
-    ...calyx,
-    leafy(part(new CylinderGeometry(0.014, 0.022, 0.09, 6), ld, { p: [0.01, 0.47, 0], r: [0, 0, 0.25] })),
-  ]);
+  ];
+  for (let i = 0; i < 5; i++)
+    parts.push(
+      leaf(
+        { stage, length: 0.17 * Math.max(0.7, k), width: 0.07, shape: 'lance', curl: 1.2, fold: 0.1, segments: 2 },
+        [0, fruitTop, 0],
+        (i / 5) * Math.PI * 2 + 0.3,
+        1.35,
+      ),
+    );
+  parts.push(stem(new Vector3(0, fruitTop - 0.01, 0), new Vector3(0.015, fruitTop + 0.07, 0), 0.02, 0.013, ld, 6));
+  if (stage === 0) {
+    const s0 = new Vector3(0.1, 0.02, -0.08);
+    const s1 = new Vector3(0.1, 0.3, -0.1);
+    parts.push(stem(s0, s1, 0.014, 0.01, lc));
+    parts.push(leaf({ stage, length: 0.22, width: 0.12, shape: 'lance', curl: 0.7 }, [s1.x, s1.y, s1.z], 1.3, 1.05));
+    parts.push(leaf({ stage, length: 0.22, width: 0.12, shape: 'lance', curl: 0.7 }, [s1.x, s1.y, s1.z], -1.8, 1.05));
+    parts.push(
+      leaf({ stage, length: 0.28, width: 0.2, shape: 'oval', curl: 0.6 }, [s1.x, s1.y + 0.01, s1.z], 0.2, 0.55),
+    );
+  } else {
+    const n = stage === 1 ? 3 : 2;
+    for (let i = 0; i < n; i++)
+      parts.push(
+        leaf(
+          { stage, length: 0.34, width: 0.22, shape: 'oval', curl: 1.0, fold: 0.35 },
+          [0, 0.05, -0.1],
+          Math.PI + (i - (n - 1) / 2) * 0.9,
+          0.75,
+        ),
+      );
+  }
+  return mergeCrop(parts);
 }
 
+/** Tall kernelled cob wrapped in husk blades with silk; young corn is grass-like blades around a small cob tip. */
 function corn(stage: Stage): BufferGeometry {
+  const k = FRUIT[stage];
   const body = cropColor('corn', stage);
   const kernelDark = shade(body, 0.86);
-  const cob = new CapsuleGeometry(0.11, 0.34, 4, 16);
+  const cob = new CapsuleGeometry(0.11 * k, 0.34 * k, 4, 16);
   const pos = cob.getAttribute('position');
   const v = new Vector3();
   for (let i = 0; i < pos.count; i++) {
     v.fromBufferAttribute(pos, i);
-    const row = Math.sin(v.y * 95);
+    const row = Math.sin((v.y / k) * 95);
     const col = Math.sin(Math.atan2(v.z, v.x) * 14);
     const bump = 1 + 0.045 * Math.max(0, row) * Math.max(0, col);
     pos.setXYZ(i, v.x * bump, v.y, v.z * bump);
   }
-  const lc = leafColor(stage);
-  const ll = leafColor(stage, true);
-  const husk = (yaw: number, tilt: number, len: number, col: Color) => {
-    const g = new ConeGeometry(0.1, len, 7, 2, true);
-    g.translate(0, len / 2, 0);
-    const p2 = g.getAttribute('position');
-    for (let i = 0; i < p2.count; i++) {
-      v.fromBufferAttribute(p2, i);
-      p2.setXYZ(i, v.x, v.y, v.z * 0.35 + 0.06 * (v.y / len) ** 2);
-    }
-    g.computeVertexNormals();
-    g.rotateZ(tilt);
-    g.rotateY(yaw);
-    g.translate(0, 0.04, 0);
-    return leafy(part(g, col));
-  };
-  const silk = [0, 1, 2, 3].map((k) =>
-    tag(
-      part(new CylinderGeometry(0.006, 0.01, 0.13, 4), new Color(k % 2 ? '#D9B27A' : '#C79D62'), {
-        p: [0.02 * Math.cos(k * 1.6), 0.73, 0.02 * Math.sin(k * 1.6)],
-        r: [0.4 * Math.sin(k), 0, 0.5 * Math.cos(k * 2)],
-      }),
-      'dusty',
-    ),
-  );
-  return mergeCrop([
+  const cobY = 0.04 + 0.28 * k;
+  const parts: BufferGeometry[] = [
     part(
       smooth(cob),
-      (p) => (Math.sin(p.y * 95) < -0.2 || Math.sin(Math.atan2(p.z, p.x) * 14) < -0.3 ? kernelDark : body),
-      { p: [0, 0.38, 0] },
+      (p) =>
+        Math.sin(((p.y - cobY) / k) * 95) < -0.2 || Math.sin(Math.atan2(p.z, p.x) * 14) < -0.3 ? kernelDark : body,
+      {
+        p: [0, cobY + 0.06 * k, 0],
+      },
     ),
-    husk(0, -0.32, 0.54, lc),
-    husk(Math.PI, -0.3, 0.5, ll),
-    husk(Math.PI / 2, -0.22, 0.42, shade(lc, 0.92)),
-    husk(-Math.PI / 2, -0.25, 0.38, ll),
-    ...silk,
-  ]);
+  ];
+  // Husks hug the cob: broad strap blades rooted just outside it, covering its lower two thirds.
+  const husks = stage === 0 ? 2 : 4;
+  for (let i = 0; i < husks; i++) {
+    const yaw = (i / husks) * Math.PI * 2 + 0.4;
+    const r = 0.1 * k;
+    parts.push(
+      leaf(
+        { stage, length: 0.46 * k, width: 0.2 * k, shape: 'strap', curl: -0.35, fold: 0.55, segments: 5 },
+        [Math.sin(yaw) * r, 0.03, Math.cos(yaw) * r],
+        yaw,
+        0.32,
+      ),
+    );
+  }
+  // Outer leaves: arching blades (the young plant is mostly these).
+  const outer = byStage(stage, [3, 2, 1]);
+  for (let i = 0; i < outer; i++)
+    parts.push(
+      leaf(
+        {
+          stage,
+          length: byStage(stage, [0.46, 0.44, 0.4]),
+          width: 0.11,
+          shape: 'strap',
+          curl: 1.3,
+          fold: 0.4,
+          segments: 6,
+        },
+        [0, 0.03, 0],
+        Math.PI * 0.8 + i * 2.1,
+        0.35,
+      ),
+    );
+  if (stage > 0) {
+    const silkTop = cobY + 0.06 * k + 0.28 * k;
+    for (let j = 0; j < 4; j++)
+      parts.push(
+        tag(
+          part(new CylinderGeometry(0.006, 0.01, 0.13 * k, 4), new Color(j % 2 ? '#D9B27A' : '#C79D62'), {
+            p: [0.02 * Math.cos(j * 1.6), silkTop, 0.02 * Math.sin(j * 1.6)],
+            r: [0.4 * Math.sin(j), 0, 0.5 * Math.cos(j * 2)],
+          }),
+          'dusty',
+        ),
+      );
+  }
+  return mergeCrop(parts);
 }
 
+/** Curved glossy teardrop with a star cap; young plants carry broad, drooping leaves. */
 function eggplant(stage: Stage): BufferGeometry {
+  const k = FRUIT[stage];
   const body = cropColor('eggplant', stage);
   const pts = [
     [0, 0],
@@ -314,38 +399,61 @@ function eggplant(stage: Stage): BufferGeometry {
     [0.075, 0.54],
     [0.05, 0.575],
     [0, 0.585],
-  ].map(([x, y]) => new Vector2(x, y));
-  const g = new LatheGeometry(pts, 20);
+  ].map(([x, y]) => new Vector2(x! * k, y! * k));
+  const g = new LatheGeometry(pts, stage === 0 ? 14 : 20);
   const pos = g.getAttribute('position');
   const v = new Vector3();
   for (let i = 0; i < pos.count; i++) {
     v.fromBufferAttribute(pos, i);
-    pos.setX(i, v.x + 0.34 * v.y * v.y);
+    pos.setX(i, v.x + (0.34 * v.y * v.y) / k);
   }
   const lc = leafColor(stage);
   const sheen = body.clone().lerp(new Color('#C9B4EA'), 0.45);
-  const cap = Array.from({ length: 5 }, (_, i) => {
-    const a = (i / 5) * Math.PI * 2;
-    const c2 = new ConeGeometry(0.05, 0.16, 4);
-    c2.translate(0, -0.08, 0);
-    c2.scale(1, 1, 0.35);
-    c2.rotateZ(0.5);
-    c2.rotateY(-a);
-    c2.translate(0.1, 0.57, 0);
-    return leafy(part(c2, i % 2 ? lc : shade(lc, 0.88)));
-  });
-  return mergeCrop([
+  const capAt = new Vector3(-0.07 + (0.34 * (0.575 * k) ** 2) / k + 0.02, 0.03 + 0.575 * k, 0);
+  const parts: BufferGeometry[] = [
     tag(
-      part(smooth(g), (p) => (p.x < -0.1 && p.y > 0.12 && p.y < 0.34 ? sheen : body), { p: [-0.07, 0.03, 0] }),
+      part(smooth(g), (p) => (p.x < -0.1 * k && p.y > 0.12 * k && p.y < 0.34 * k ? sheen : body), {
+        p: [-0.07, 0.03, 0],
+      }),
       'gloss',
     ),
-    leafy(part(new SphereGeometry(0.07, 10, 6), lc, { p: [0.09, 0.59, 0], s: [1, 0.55, 1] })),
-    ...cap,
-    leafy(part(new CylinderGeometry(0.018, 0.026, 0.11, 6), shade(lc, 0.85), { p: [0.12, 0.66, 0], r: [0, 0, -0.4] })),
-  ]);
+    leafy(
+      part(new SphereGeometry(0.07 * Math.max(0.7, k), 10, 6), lc, { p: [capAt.x, capAt.y, capAt.z], s: [1, 0.55, 1] }),
+    ),
+  ];
+  for (let i = 0; i < 5; i++)
+    parts.push(
+      leaf(
+        { stage, length: 0.14 * Math.max(0.75, k), width: 0.06, shape: 'lance', curl: 1.6, fold: 0.1, segments: 2 },
+        [capAt.x, capAt.y, capAt.z],
+        (i / 5) * Math.PI * 2,
+        1.75,
+      ),
+    );
+  parts.push(stem(capAt, capAt.clone().add(new Vector3(0.05, 0.08, 0)), 0.026, 0.018, shade(lc, 0.85), 6));
+  const leaves = byStage(stage, [2, 2, 1]);
+  for (let i = 0; i < leaves; i++)
+    parts.push(
+      leaf(
+        {
+          stage,
+          length: byStage(stage, [0.36, 0.36, 0.34]),
+          width: byStage(stage, [0.28, 0.26, 0.24]),
+          shape: 'oval',
+          curl: 1.0,
+          fold: 0.3,
+        },
+        [0.02, 0.04, -0.1],
+        Math.PI + (leaves === 1 ? 0.4 : (i - 0.5) * 1.3),
+        0.8,
+      ),
+    );
+  return mergeCrop(parts);
 }
 
+/** A cluster of dusty berries with crowned tips on a woody twig with small paired leaves. */
 function blueberry(stage: Stage): BufferGeometry {
+  const k = FRUIT[stage];
   const body = cropColor('blueberry', stage);
   const bloom = body.clone().lerp(new Color('#B9C7E6'), 0.32);
   const crown = shade(body, 0.55);
@@ -355,40 +463,43 @@ function blueberry(stage: Stage): BufferGeometry {
     [0, 0.15, -0.12, 0.14],
   ];
   const parts: BufferGeometry[] = [];
-  for (const [x, y, z, r] of berries) {
-    const sph = new SphereGeometry(r, 12, 8);
+  for (const [x, y, z, r0] of berries) {
+    const r = r0 * k;
+    const [bx, by, bz] = [x * (0.4 + 0.6 * k), 0.02 + (y - 0.02) * k, z * (0.4 + 0.6 * k)];
+    const sph = new SphereGeometry(r, stage === 0 ? 10 : 12, stage === 0 ? 6 : 8);
     parts.push(
       tag(
-        part(sph, (p) => (p.y > 0.04 ? bloom : body), { p: [x, y, z], s: [1, 0.92, 1] }),
+        part(sph, (p) => (p.y > by + 0.04 * k ? bloom : body), { p: [bx, by, bz], s: [1, 0.92, 1] }),
         'dusty',
       ),
     );
-    for (let k = 0; k < 5; k++) {
-      const a = (k / 5) * Math.PI * 2;
+    for (let j = 0; j < 5; j++) {
+      const a = (j / 5) * Math.PI * 2;
       parts.push(
-        part(new ConeGeometry(0.018, 0.05, 3), crown, {
-          p: [x + Math.cos(a) * 0.028, y + r * 0.9, z + Math.sin(a) * 0.028],
+        part(new ConeGeometry(0.018 * k, 0.05 * k, 3), crown, {
+          p: [bx + Math.cos(a) * 0.028 * k, by + r * 0.9, bz + Math.sin(a) * 0.028 * k],
           r: [Math.sin(a) * 0.9, 0, -Math.cos(a) * 0.9],
         }),
       );
     }
   }
-  const lc = leafColor(stage);
-  parts.push(
-    leafy(part(new SphereGeometry(1, 8, 6), lc, { p: [0.04, 0.32, -0.2], r: [0.7, 0.3, 0.2], s: [0.11, 0.018, 0.2] })),
-  );
-  parts.push(
-    leafy(
-      part(new SphereGeometry(1, 8, 6), leafColor(stage, true), {
-        p: [-0.1, 0.3, -0.2],
-        r: [0.7, -0.5, -0.3],
-        s: [0.08, 0.016, 0.15],
-      }),
-    ),
-  );
-  parts.push(
-    leafy(part(new CylinderGeometry(0.01, 0.014, 0.2, 5), shade(lc, 0.8), { p: [0, 0.27, -0.1], r: [0.55, 0, 0] })),
-  );
+  const wood = new Color('#8A6A55');
+  const t0 = new Vector3(0, 0.02, -0.12);
+  const t1 = new Vector3(0.02, byStage(stage, [0.38, 0.36, 0.34]), -0.2);
+  parts.push(stem(t0, t1, 0.014, 0.009, wood));
+  const pairs = byStage(stage, [3, 2, 2]);
+  for (let j = 0; j < pairs; j++) {
+    const at = t0.clone().lerp(t1, 0.45 + (0.55 * j) / Math.max(1, pairs - 1));
+    for (const side of [-1, 1])
+      parts.push(
+        leaf(
+          { stage, length: 0.17, width: 0.11, shape: 'oval', curl: 0.6, fold: 0.3, segments: 4 },
+          [at.x, at.y, at.z],
+          side * 1.4 + Math.PI + j * 0.5,
+          1.0,
+        ),
+      );
+  }
   return mergeCrop(parts);
 }
 
