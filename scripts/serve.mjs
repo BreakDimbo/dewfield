@@ -7,7 +7,7 @@ const root = join(process.cwd(), 'dist');
 const port = Number(process.env.PORT ?? 5393);
 const TYPES = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.svg': 'image/svg+xml', '.woff2': 'font/woff2', '.webm': 'audio/webm', '.mp3': 'audio/mpeg', '.png': 'image/png', '.txt': 'text/plain; charset=utf-8' };
 const cache = (p) =>
-  p.startsWith('/assets/') || p.startsWith('/fonts/') ? 'public, max-age=31536000, immutable' : p.startsWith('/audio/') ? 'public, max-age=604800' : 'no-cache';
+  p.startsWith('/assets/') ? 'public, max-age=31536000, immutable' : p.startsWith('/audio/') ? 'public, max-age=604800' : 'no-cache';
 createServer((req, res) => {
   const url = decodeURIComponent((req.url ?? '/').split('?')[0]);
   let file = normalize(join(root, url === '/' ? 'index.html' : url));

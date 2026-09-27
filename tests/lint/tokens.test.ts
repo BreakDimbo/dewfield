@@ -24,7 +24,7 @@ describe('design tokens only', () => {
   });
 
   it('the display font subset is present and within budget', () => {
-    const size = statSync('public/fonts/wenkai-subset.woff2').size;
+    const size = statSync('src/ui/fonts/wenkai-subset.woff2').size;
     expect(size).toBeGreaterThan(20_000);
     expect(size).toBeLessThanOrEqual(150 * 1024);
   });

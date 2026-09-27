@@ -92,7 +92,7 @@ dewfield/
 │  ├─ models/                     # 压缩后的 .glb
 │  ├─ env/                        # 自托管环境贴图（≤ 256px）
 │  ├─ audio/                      # sfx 精灵（webm + mp3 + json）、music/
-│  └─ fonts/                      # 子集化的展示字体
+│  └─ fonts/                      # 展示字体的 OFL 许可（子集本身在 src/ui/fonts/，经 Vite 带哈希输出）
 ├─ src/
 │  ├─ main.tsx
 │  ├─ app/                        # 组合根：App.tsx、Canvas 挂载、按 App 状态机切换界面

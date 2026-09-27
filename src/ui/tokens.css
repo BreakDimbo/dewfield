@@ -1,6 +1,7 @@
 @font-face {
   font-family: 'LXGW WenKai';
-  src: url('/fonts/wenkai-subset.woff2') format('woff2');
+  /* relative so Vite fingerprints it into /assets/ (immutable cache); built by pnpm assets:font */
+  src: url('./fonts/wenkai-subset.woff2') format('woff2');
   font-weight: 400 700;
   font-display: swap;
 }
