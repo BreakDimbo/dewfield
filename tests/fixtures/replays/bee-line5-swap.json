@@ -1,0 +1,21 @@
+{
+  "description": "P2-01 (refills come from spawnQueue so the hash does not depend on spawn tunables): a swap makes a horizontal 5 (bee at b = (2,3)), then the new bee is swapped with the tile below it. DEFAULT_TUNABLES.",
+  "tunables": "DEFAULT",
+  "seed": 20260927,
+  "fieldAscii": [
+    "T0 M0 T0 M0 T0 M0 T0",
+    "M0 T0 M0 T0 M0 T0 M0",
+    "T0 M0 C2 M0 T0 M0 T0",
+    "C2 C2 E0 C2 C2 M0 T0",
+    "T0 M0 T0 M0 T0 M0 T0",
+    "M0 T0 M0 T0 M0 T0 M0",
+    "T0 M0 T0 M0 T0 M0 T0"
+  ],
+  "spawnQueue": "B1 E2 C0 T1 M2 B0 E1 C2 T0 M1 B1 E2 C0 T1 M2 B0 E1 C2 T0 M1 B1 E2 C0 T1 M2 B0 E1 C2 T0 M1 B1 E2 C0 T1 M2 B0 E1 C2 T0 M1 B1 E2 C0 T1 M2 B0 E1 C2 T0 M1 B1 E2 C0 T1 M2 B0 E1 C2 T0 M1",
+  "commission": { "items": [{ "crop": "corn", "count": 30 }], "moves": 20 },
+  "moves": [
+    [2, 2, 2, 3],
+    [2, 3, 2, 4]
+  ],
+  "expect": { "events": 34, "hash": "6bf69180" }
+}
