@@ -28,6 +28,8 @@ export interface ChoreoAdapters {
     bees(from: Pos, cells: readonly Pos[], t01: number): void;
     harvestBurst(item: HarvestItem, depth: number): void;
     growSpark(pos: Pos): void;
+    /** P2-11 morning wake: a gentle field-wide shimmer, one column at a time; `calm` under reduced motion. */
+    morningShimmer(column: number, calm: boolean): void;
     rain(pos: Pos): void;
     createdFlash(pos: Pos, kind: SpecialKind): void;
     shake(strength: number): void;
@@ -239,6 +241,7 @@ export function buildTimeline(
         const n = e.items.length;
         tl.cue(cur, () => ad.sfx({ t: 'grow', count: n }));
         if (e.cause === 'water') for (const it of e.items) tl.cue(cur + it.pos.x * 60 - 120, () => ad.vfx.rain(it.pos));
+        if (overnight) for (let x = 0; x < 7; x++) tl.cue(cur + x * 260, () => ad.vfx.morningShimmer(x, rm));
         let span = 0;
         e.items.forEach((it, k) => {
           let switched = false;

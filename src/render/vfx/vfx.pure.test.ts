@@ -43,4 +43,15 @@ describe('VfxSystem (P2-11)', () => {
     expect(count(half) / count(full)).toBeGreaterThan(0.35);
     expect(count(half) / count(full)).toBeLessThan(0.65);
   });
+
+  it('morning shimmer stays gentle and leaves headroom under the cap', () => {
+    const v = new VfxSystem(100, new MeshStandardMaterial());
+    v.morningShimmer(0, false);
+    expect(count(v)).toBe(9);
+    for (let k = 0; k < 50; k++) v.morningShimmer(k % 7, false);
+    expect(count(v)).toBeLessThanOrEqual(60);
+    const calm = new VfxSystem(100, new MeshStandardMaterial());
+    calm.morningShimmer(3, true);
+    expect(count(calm)).toBe(3);
+  });
 });

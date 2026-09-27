@@ -37,6 +37,7 @@ function fakeAdapters() {
       bees: () => {},
       harvestBurst: () => {},
       growSpark: () => {},
+      morningShimmer: (x, calm) => rec(`shimmer:${x}:${calm}`),
       rain: () => {},
       createdFlash: () => rec('createdFlash'),
       shake: () => {},
@@ -64,10 +65,10 @@ function fakeAdapters() {
 const anim = VS_TUNABLES.anim;
 const guided = COMMISSION_BY_ID.T1!.guidedMoves!.map((g) => mv(g.a[0], g.a[1], g.b[0], g.b[1]));
 
-function play(events: BoardEvent[], initial: Parameters<typeof buildTimeline>[1], remaining = {}) {
+function play(events: BoardEvent[], initial: Parameters<typeof buildTimeline>[1], remaining = {}, reducedMotion = false) {
   const f = fakeAdapters();
   initial.forEach((t, i) => t && f.positions.set(t.uid, [i % 7, Math.floor(i / 7)]));
-  const tl = buildTimeline(events, initial, f.ad, anim, { remaining });
+  const tl = buildTimeline(events, initial, f.ad, anim, { remaining, reducedMotion });
   while (!tl.done) {
     f.clock.now = tl.time;
     tl.advance(4);
@@ -158,6 +159,21 @@ describe('buildTimeline (03 §9.3)', () => {
     const stages = log.filter((l) => l.what.startsWith('stage'));
     expect(stages).toHaveLength(7);
     for (let k = 1; k < stages.length; k++) expect(stages[k]!.t).toBeGreaterThan(stages[k - 1]!.t);
+  });
+
+  it('overnight wave wakes the field with a column-by-column morning shimmer (P2-11); watering does not', () => {
+    const run = t1Run(VS_TUNABLES);
+    const row = run.board.cells.slice(0, 7);
+    const grow = (cause: 'overnight' | 'water'): BoardEvent[] => [
+      { t: 'grow', cause, items: row.map((t, x) => ({ pos: { x, y: 0 }, uid: t.uid, from: 0, to: 1 })) },
+    ];
+    const night = play(grow('overnight'), run.board.cells).log.filter((l) => l.what.startsWith('shimmer'));
+    expect(night.map((l) => l.what)).toEqual([0, 1, 2, 3, 4, 5, 6].map((x) => `shimmer:${x}:false`));
+    for (let k = 1; k < night.length; k++) expect(night[k]!.t).toBeGreaterThan(night[k - 1]!.t);
+    const calm = play(grow('overnight'), run.board.cells, {}, true).log.filter((l) => l.what.startsWith('shimmer'));
+    expect(calm.every((l) => l.what.endsWith(':true'))).toBe(true);
+    expect(calm).toHaveLength(7);
+    expect(play(grow('water'), run.board.cells).log.some((l) => l.what.startsWith('shimmer'))).toBe(false);
   });
 });
 
