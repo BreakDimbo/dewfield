@@ -1,11 +1,4 @@
 node_modules/
-dist/
-coverage/
-test-results/
-playwright-report/
 *.log
 .DS_Store
-.vite/
-.audio-tmp/
-.font-cache/
 .claude/worktrees/
