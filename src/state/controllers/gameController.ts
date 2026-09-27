@@ -97,6 +97,12 @@ function onHubArrival(from: string): void {
   const home = useAppStore.getState().home;
   if (!home) return;
   const gate = currentGate(home);
+  // G0 has no hub actions: a reload during T1 (runs are never saved, 02 §12.4) goes straight back into T1.
+  if (gate === 'G0' && home.commissions.active) {
+    dispatch({ type: 'OPEN_BRIEF', allowed: true });
+    dispatch({ type: 'START_RUN' });
+    return;
+  }
   if (from === 'toHub' && gate === 'G1') showTip('fieldMemory');
   if (from === 'toHub' && useAppStore.getState().settlement?.result !== 'won' && useAppStore.getState().settlement) showTip('firstFail');
   if (gate === 'G3' && home.commissions.active) {

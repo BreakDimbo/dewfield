@@ -3,11 +3,14 @@ import { now } from '@/platform/clock';
 import { persistence } from '@/state/persistence';
 
 const KEY = 'dewfield:telemetry';
-type Payload<E extends TelemetryEvent['e']> = Omit<Extract<TelemetryEvent, { e: E }>, 'e' | 't' | 'sid'>;
+/** Survives reloads (and save resets) so `pnpm kpi` counts one tester once, however many page loads. */
+const TESTER_KEY = 'dewfield:tester';
+type Payload<E extends TelemetryEvent['e']> = Omit<Extract<TelemetryEvent, { e: E }>, 'e' | 't' | 'sid' | 'tid'>;
 
 let buffer: TelemetryEvent[] | null = null;
 let started = 0;
 let sid = '';
+let tid = '';
 let flushTimer: ReturnType<typeof setTimeout> | null = null;
 
 function load(): TelemetryEvent[] {
@@ -19,6 +22,17 @@ function load(): TelemetryEvent[] {
     buffer = [];
   }
   return buffer;
+}
+
+function testerId(): string {
+  if (tid) return tid;
+  const a = persistence.adapter;
+  tid = a.get(TESTER_KEY) ?? '';
+  if (!tid) {
+    tid = `t${now().toString(36)}${Math.random().toString(36).slice(2, 8)}`;
+    a.set(TESTER_KEY, tid);
+  }
+  return tid;
 }
 
 function flush(): void {
@@ -38,7 +52,7 @@ export const telemetry = {
       started = now();
       sid = `s${started.toString(36)}`;
     }
-    const ev = { e, t: now() - started, sid, ...fields } as unknown as TelemetryEvent;
+    const ev = { e, t: now() - started, sid, tid: testerId(), ...fields } as unknown as TelemetryEvent;
     buffer = pushRing(load(), ev, 5000);
     if (!flushTimer) flushTimer = setTimeout(flush, 500);
   },

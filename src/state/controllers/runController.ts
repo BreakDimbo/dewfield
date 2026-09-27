@@ -41,7 +41,8 @@ function markInput(): void {
     firstInputAt = now();
     telemetry.log('first_input', { msSinceRunStart: firstInputAt - runStartedAt });
   }
-  clearHint();
+  // 02 §4.3: any input clears the hint and restarts the idle countdown.
+  armHint();
 }
 
 function clearHint(): void {
@@ -50,14 +51,20 @@ function clearHint(): void {
   if (useUiStore.getState().hint) useUiStore.setState({ hint: null });
 }
 
+/** Idle, free-input play: the only state in which the hint may count down or show. */
+function hintAllowed(): boolean {
+  const { run, phase, paused } = useRunStore.getState();
+  return !!run && phase === 'idle' && !paused && run.status === 'playing' && !guideFor(run) && !usePresentationStore.getState().busy;
+}
+
 /** 02 §4.3: after `hint.idleMs` of idle, wiggle the best move (never during guided steps). */
 function armHint(): void {
   clearHint();
-  const { run, phase } = useRunStore.getState();
-  if (!run || phase !== 'idle' || run.status !== 'playing' || guideFor(run)) return;
+  if (!hintAllowed()) return;
   hintTimer = setTimeout(() => {
+    hintTimer = null;
     const s = useRunStore.getState();
-    if (!s.run || s.phase !== 'idle' || s.paused) return;
+    if (!s.run || !hintAllowed()) return;
     const h = pickHint(s.run, gameCfg());
     if (!h) return;
     useUiStore.setState({ hint: h.move });
@@ -167,7 +174,6 @@ export const runController = {
         return;
       case 'deselect':
         useRunStore.setState({ selected: null, preview: null });
-        armHint();
         return;
       case 'clearPreview':
         useRunStore.setState({ preview: null });

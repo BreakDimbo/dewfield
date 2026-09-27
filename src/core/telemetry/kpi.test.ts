@@ -33,7 +33,28 @@ describe('KPI (P1-24, 02 §13.3)', () => {
     const md = kpiMarkdown(r);
     expect(md).toContain('K1a');
     expect(md).toContain('| T1 | 2 | 100% | 1.00 |');
-    expect(kpiMarkdown(computeKpis([]))).toContain('会话数：0');
+    expect(md).toContain('| C01 | 1 | 0% | — |');
+    expect(md).toContain('| K5（入夜未用照料点：点数→次数） | 2→1 |');
+    const empty = kpiMarkdown(computeKpis([]));
+    expect(empty).toContain('会话数：0');
+    expect(empty).toContain('| K5（入夜未用照料点：点数→次数） | — |');
+  });
+  it('groups page loads by tester id when present (a reload is not a second tester)', () => {
+    // Session a split across two page loads of one tester: the reload logs session_start and t restarts at 0.
+    const evs = a as TelemetryEvent[];
+    const cut = evs.findIndex((e) => e.e === 'run_end') + 1;
+    const first = evs.slice(0, cut).map((e) => ({ ...e, sid: 'a1', tid: 'x' }));
+    const t0 = evs[cut - 1]!.t;
+    const second = [{ ...evs[0]!, t: t0 }, ...evs.slice(cut)].map((e) => ({ ...e, sid: 'a2', tid: 'x', t: e.t - t0 }));
+    const split = computeKpis([...first, ...second, ...(b as TelemetryEvent[])]);
+    expect(split.sessions).toBe(2);
+    expect(split.k1a).toEqual(r.k1a);
+    expect(split.k2).toEqual(r.k2);
+    expect(split.k3MedianMs).toBe(r.k3MedianMs);
+    expect(split.k4).toEqual(r.k4);
+    expect(split.k5).toEqual(r.k5);
+    expect(computeKpis([...first, ...second]).sessions).toBe(1);
+    expect(computeKpis([...first.map(({ tid: _t, ...e }) => e), ...second.map(({ tid: _t, ...e }) => e)] as TelemetryEvent[]).sessions).toBe(2);
   });
   it('ring buffer keeps the newest 5000', () => {
     let buf: number[] = [];
