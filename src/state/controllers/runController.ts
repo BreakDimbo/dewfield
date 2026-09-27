@@ -278,12 +278,36 @@ export const runController = {
   },
 };
 
-/** 04 P1-16 #1 dev assertion: what the overlay showed equals the first segment that actually happened. */
-function assertPreviewMatches(shown: ReturnType<typeof previewMove>, events: readonly BoardEvent[]): void {
+type Seg<T extends BoardEvent['t']> = Extract<BoardEvent, { t: T }>;
+const pk = (p: { x: number; y: number }) => `${p.x},${p.y}`;
+
+/**
+ * 04 P1-16 #1 / 02 §4.1: which parts of what the overlay showed differ from the first segment that actually
+ * happened (up to the first fall/spawn). Empty when preview == actual. Pure; exported for the controller test.
+ */
+export function previewMismatch(shown: ReturnType<typeof previewMove>, events: readonly BoardEvent[]): { field: string; shown: string; actual: string }[] {
   const end = events.findIndex((e) => e.t === 'fall' || e.t === 'spawn');
   const seg = end < 0 ? events : events.slice(0, end);
-  const harvest = seg.find((e) => e.t === 'harvest') as Extract<BoardEvent, { t: 'harvest' }> | undefined;
-  const a = shown.harvest.map((h) => h.uid).join(',');
-  const b = (harvest?.items ?? []).map((h) => h.uid).join(',');
-  if (a !== b) console.error('[preview] shown harvest differs from actual first segment', { shown: a, actual: b });
+  const of = <T extends BoardEvent['t']>(t: T) => seg.filter((e): e is Seg<T> => e.t === t);
+  const pairs: [string, string, string][] = [
+    ['harvest', shown.harvest.map((h) => h.uid).join(','), of('harvest').flatMap((e) => e.items.map((h) => h.uid)).join(',')],
+    [
+      'growth',
+      shown.growth.map((g) => `${g.uid}:${g.from}>${g.to}`).join(','),
+      of('grow').flatMap((e) => e.items.map((g) => `${g.uid}:${g.from}>${g.to}`)).join(','),
+    ],
+    ['created', shown.created.map((c) => `${c.kind}@${pk(c.pos)}`).join(','), of('specialCreated').map((c) => `${c.kind}@${pk(c.pos)}`).join(',')],
+    [
+      'triggered',
+      shown.triggered.map((t) => `${t.kind}@${pk(t.pos)}[${t.area.map(pk).join(' ')}]`).join(','),
+      of('specialTriggered').map((t) => `${t.kind}@${pk(t.pos)}[${t.area.map(pk).join(' ')}]`).join(','),
+    ],
+    ['pollinated', shown.pollinated.map(pk).join(' '), of('pollinate').flatMap((e) => e.cells.map(pk)).join(' ')],
+  ];
+  return pairs.filter(([, a, b]) => a !== b).map(([field, a, b]) => ({ field, shown: a, actual: b }));
+}
+
+/** Dev assertion: what the overlay showed equals the first segment that actually happened. */
+function assertPreviewMatches(shown: ReturnType<typeof previewMove>, events: readonly BoardEvent[]): void {
+  for (const m of previewMismatch(shown, events)) console.error(`[preview] shown ${m.field} differs from actual first segment`, m);
 }
