@@ -38,7 +38,7 @@ describe('balance guards', () => {
       uplift += care - none;
     }
     expect(uplift / ids.length).toBeGreaterThanOrEqual(0.05);
-  });
+  }, 120_000); // 4 × 200 sims: ~10 s alone, can exceed the 30 s default under `--coverage` with all workers busy
 
   it('campaign reaches the procedural commissions and is deterministic', () => {
     const a = simulateCampaign({ runs: 3, seed: 5, bot: 'greedy', care: 'waterOrdered', extra: 1 }, cfg);
