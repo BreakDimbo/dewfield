@@ -9,14 +9,15 @@
 
 ## 当前状态
 
-**MVP（v0.1.0-mvp）**：04 / 05 中的 Phase 0–2 任务全部交付，G0 通过，G1 / G2 以“等价验收”工件结项（真人试玩相关指标见下）。进度与每项验收备注以 [`docs/05-TASK-CHECKLIST.md`](docs/05-TASK-CHECKLIST.md) 为准。
+**工程侧完成，等待真人验收。** Phase 0–2 中所有能由工程完成的任务都已完成，并有测试或报告作证据；`bash scripts/ci.sh` 通过，e2e 15 条全部通过。仍未勾选的任务都卡在需要真人或真机的验收项上：PT1 / PT2 试玩、灰度可读性与海报测试的真人评审、正式美术、核显笔记本与 iPad 实机帧率、iPad Safari 音频与手势确认、线上部署。尚未打 `v0.1.0-mvp` 标签（依赖 PT2）。逐项状态见 [`docs/05-TASK-CHECKLIST.md`](docs/05-TASK-CHECKLIST.md)。
 
 能玩到的完整循环：标题 → T1“第一篮”（硬锁引导 3 步：三连 → 4 连出镰刀 → 镰刀横扫 + 级联）→ 结算 → 同田转场回到玻璃露台（田原样保留）→ T2 → 只读 C01 委托卡 → 引导浇垄 → C01（胜利后丰收时刻）→ 暮：商店买装饰（露台 L1→L3，装饰出现在固定挂点）→ 入夜 → 晨醒全田长大一格 → 第 2 天起全部开放（放蜂、拍照、明早预览、程序化委托）。存档只在安全点写入，刷新后可“继续”；多标签页自动锁定。
 
 - **规则层**（`src/core`，纯 TS）：匹配/形状、结算循环、生长与邻格催熟、镰刀/晨露珠/蜂群与 7 种组合、预演（= 实际第一段）、回退、提示、丰收时刻、委托与部分交货、星级、露台/浇垄/放蜂/入夜/装饰与等级、第 1 天闸门 G0–G5、情境提示、程序化委托、存档 v1（zod、备份、迁移、损坏保留）、遥测与 KPI。
 - **表现层**：单一画布、对象池 + 事件日志驱动的编排器（加速 / 跳过 / 一致性断言）、RD-5 分层预演、范围预警、3 种组合专属演出、产出飞入订单篮、晨/暮/夜光照、程序化作物与露台美术、8 件装饰、拍照模式、画质分级。
-- **音频**：离线合成的 25 个音效精灵 + 3 首循环音乐（`pnpm assets:audio`，ffmpeg 编码），Howler 播放，级联五声音阶，首次交互前静音。
-- **字体**：霞鹜文楷子集（115 KB，OFL，覆盖校验）。
+- **音频**：离线合成的 25 个音效精灵 + 3 首 60–90 秒循环音乐（含鸟鸣 / 虫鸣与玻璃风铃，≈ −16 LUFS；`pnpm assets:audio`，需要 ffmpeg），Howler 播放，级联五声音阶，首次交互前不创建 AudioContext。
+- **字体**：霞鹜文楷子集（约 120 KB，OFL，经 Vite 带哈希输出；`tools/assets/fontChars.test.ts` 校验子集覆盖全部界面文案）。
+- **美术**：程序化灰盒作物与露台；glb 管线已就绪（`pnpm assets:models`，`?models=glb` 预览，换正式美术只改 manifest 一行，见 03 §14）。
 
 ## 操作
 
@@ -58,7 +59,7 @@ Vite 8 · React 19 · TypeScript 6.0 · three.js r186 + React Three Fiber 9 + dr
 pnpm install
 pnpm dev            # http://localhost:5391
 pnpm test           # 单元 + 属性 + 集成 + 平衡守卫（node 与 jsdom 两个 project）
-pnpm e2e            # Playwright：冒烟、T1、4 条回归流程、性能/遮挡预算（首次需 pnpm exec playwright install chromium）
+pnpm e2e            # Playwright：冒烟、T1、4 条回归流程、稳健性（往返/跳过/拍照/上下文丢失/遮挡）、预算（首次需 pnpm exec playwright install chromium；已有 Chromium 时设 PW_CHROMIUM_PATH）
 bash scripts/ci.sh  # 完整 CI：frozen install → lint → typecheck → test(覆盖率) → build；E2E=1 时加跑 Playwright
 ```
 
@@ -84,7 +85,9 @@ VITE_BASE=/dewfield/ pnpm build   # 部署到子路径
 | `pnpm assets:audio` | 重新合成音效精灵与音乐（需要 ffmpeg） |
 | `pnpm assets:font` | 重新生成展示字体子集（缺字报错，超 150 KB 报错） |
 | `pnpm assets:budget` | 作物/标记面数预算检查（03 §14） |
-| `node tests/readability/readability.mjs` | 灰度可读性正式测试（需 dev server） |
+| `node tests/readability/readability.mjs` | 灰度可读性脚本化代理（需 dev server；不能替代真人评审） |
+| `node tools/perf/perf.mjs` | 生成 `docs/balance/perf-report.md`（体积、加载、draw call / 三角形） |
+| `node tools/perf/autoplay-check.mjs 200` | bot 自动玩 200 手，编排与逻辑 0 次不一致（需 dev server） |
 
 调试入口（URL 参数）：
 
@@ -99,7 +102,8 @@ VITE_BASE=/dewfield/ pnpm build   # 部署到子路径
 ## 报告
 
 - 数值：[`docs/balance/VS-report.md`](docs/balance/VS-report.md)、[`docs/balance/MVP-report.md`](docs/balance/MVP-report.md)、性能 [`docs/balance/perf-report.md`](docs/balance/perf-report.md)
-- 试玩与评审：[`docs/playtests/`](docs/playtests)（灰度可读性、海报测试、PT1、PT2）
+- 试玩与评审：[`docs/playtests/`](docs/playtests)（灰度可读性的脚本化代理结果；海报测试、PT1、PT2 为待填写的记录表，尚未进行）
+- 音频方向：[`docs/audio/moodboard.md`](docs/audio/moodboard.md)；部署与缓存头：[`docs/deploy.md`](docs/deploy.md)
 
 ## 核心工程约束（摘要）
 
