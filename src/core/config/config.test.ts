@@ -50,6 +50,7 @@ describe('core/config crops (02 §16.1)', () => {
       ['eggplant', 'E', 3, '#7B5BA6'],
       ['blueberry', 'B', 4, '#4E78C4'],
     ]);
+    expect(CROPS.map((c) => c.young)).toEqual(['#E6C47E', '#9DBF5E', '#CFD67E', '#A58CC4', '#8DBF8A']);
     expect(CROP_IDS).toHaveLength(5);
     expect(CROP_BY_ASCII.M?.id).toBe('corn');
     expect(CROP_BY_ID.blueberry.name).toBe('蓝莓');

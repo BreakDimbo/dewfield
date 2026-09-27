@@ -16,7 +16,7 @@ import {
   Vector3,
   type Texture,
 } from 'three';
-import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
+import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import type { CropSpecial, Stage } from '@/core/board/model';
 import type { CropId } from '@/core/config/crops';
 import { PAL, cropColor, leafColor } from './palette';
@@ -49,10 +49,64 @@ export function part(
   return g;
 }
 
+/**
+ * Baked ambient occlusion into vertex colours (01 §13.4, zero runtime cost). Every part's bounding sphere is an
+ * occluder for the other parts (analytic sphere occlusion: cosθ · r² / d²), plus a contact term near the soil.
+ * Crevices — calyx on fruit, leaf bases, berry joins, the underside at the soil — darken; open surfaces keep
+ * their authored colour.
+ */
+export function bakeAO(parts: BufferGeometry[], strength = 0.9, floor = 0.55): void {
+  const spheres = parts.map((g) => {
+    g.computeBoundingSphere();
+    return g.boundingSphere!;
+  });
+  const p = new Vector3();
+  const n = new Vector3();
+  const d = new Vector3();
+  parts.forEach((g, i) => {
+    const pos = g.getAttribute('position');
+    const nor = g.getAttribute('normal');
+    const col = g.getAttribute('color');
+    for (let k = 0; k < pos.count; k++) {
+      p.fromBufferAttribute(pos, k);
+      n.fromBufferAttribute(nor, k).normalize();
+      let occ = 0;
+      spheres.forEach((sph, j) => {
+        if (j === i || sph.radius < 0.02) return;
+        d.subVectors(sph.center, p);
+        const l = Math.max(d.length(), sph.radius * 1.05);
+        occ += Math.max(0, n.dot(d) / l) * (sph.radius * sph.radius) / (l * l);
+      });
+      // Contact with the soil: the lowest few centimetres, more so on surfaces facing down or sideways.
+      occ += Math.max(0, 1 - p.y / 0.1) * (0.6 - 0.4 * n.y);
+      const k2 = Math.max(floor, 1 - strength * Math.min(1, occ));
+      col.setXYZ(k, col.getX(k) * k2, col.getY(k) * k2, col.getZ(k) * k2);
+    }
+  });
+}
+
+/** Crop merge: bake AO across the parts first. */
+function mergeCrop(parts: BufferGeometry[]): BufferGeometry {
+  bakeAO(parts);
+  return merge(parts);
+}
+
 export function merge(parts: BufferGeometry[]): BufferGeometry {
   const g = mergeGeometries(parts, false);
   if (!g) throw new Error('mergeGeometries failed');
   g.computeBoundingSphere();
+  return g;
+}
+
+/**
+ * Weld coincident vertices (lathe seams, sphere poles) and recompute normals, so deformed bodies shade as one
+ * smooth surface instead of showing a hard seam line.
+ */
+function smooth(geo: BufferGeometry): BufferGeometry {
+  geo.deleteAttribute('normal');
+  geo.deleteAttribute('uv');
+  const g = mergeVertices(geo, 1e-4);
+  g.computeVertexNormals();
   return g;
 }
 
@@ -91,9 +145,8 @@ function carrot(stage: Stage): BufferGeometry {
     const ring = Math.sin(v.y * 62) > 0.7 && v.y < 0.47 ? 0.93 : 1;
     pos.setXYZ(i, v.x * ring + 0.05 * (0.55 - v.y) ** 2, v.y, v.z * ring);
   }
-  root.computeVertexNormals();
   const parts: BufferGeometry[] = [
-    part(root, (p) => (p.y > 0.5 ? shoulder : Math.sin(p.y * 62) > 0.7 && p.y < 0.47 ? groove : body), { p: [0, 0.03, 0] }),
+    part(smooth(root), (p) => (p.y > 0.5 ? shoulder : Math.sin(p.y * 62) > 0.7 && p.y < 0.47 ? groove : body), { p: [0, 0.03, 0] }),
   ];
   const lc = leafColor(stage);
   const ll = leafColor(stage, true);
@@ -133,12 +186,12 @@ function carrot(stage: Stage): BufferGeometry {
     tip.translate(end.x, end.y, end.z);
     parts.push(part(tip, ll));
   });
-  return merge(parts);
+  return mergeCrop(parts);
 }
 
 function tomato(stage: Stage): BufferGeometry {
   const body = cropColor('tomato', stage);
-  const sphere = new SphereGeometry(0.25, 18, 12);
+  const sphere = new SphereGeometry(0.25, 22, 14);
   const pos = sphere.getAttribute('position');
   const v = new Vector3();
   for (let i = 0; i < pos.count; i++) {
@@ -149,7 +202,6 @@ function tomato(stage: Stage): BufferGeometry {
     const dent = v.y > 0.2 ? -0.03 : 0;
     pos.setXYZ(i, v.x * k, v.y + dent, v.z * k);
   }
-  sphere.computeVertexNormals();
   const lc = leafColor(stage);
   const ld = shade(lc, 0.85);
   const calyx = Array.from({ length: 5 }, (_, i) => {
@@ -162,8 +214,8 @@ function tomato(stage: Stage): BufferGeometry {
     g.translate(0, 0.42, 0);
     return part(g, i % 2 ? lc : ld);
   });
-  return merge([
-    part(sphere, (p) => {
+  return mergeCrop([
+    part(smooth(sphere), (p) => {
       const hi = p.y > 0.1 && p.x < -0.05 && p.z > 0 ? 0.28 : p.y > 0.14 ? 0.12 : 0;
       return body.clone().lerp(new Color('#FFB7A0'), hi);
     }, { p: [0, 0.23, 0], s: [1, 0.82, 1] }),
@@ -175,7 +227,7 @@ function tomato(stage: Stage): BufferGeometry {
 function corn(stage: Stage): BufferGeometry {
   const body = cropColor('corn', stage);
   const kernelDark = shade(body, 0.86);
-  const cob = new CapsuleGeometry(0.11, 0.34, 4, 14);
+  const cob = new CapsuleGeometry(0.11, 0.34, 4, 16);
   const pos = cob.getAttribute('position');
   const v = new Vector3();
   for (let i = 0; i < pos.count; i++) {
@@ -185,7 +237,6 @@ function corn(stage: Stage): BufferGeometry {
     const bump = 1 + 0.045 * Math.max(0, row) * Math.max(0, col);
     pos.setXYZ(i, v.x * bump, v.y, v.z * bump);
   }
-  cob.computeVertexNormals();
   const lc = leafColor(stage);
   const ll = leafColor(stage, true);
   const husk = (yaw: number, tilt: number, len: number, col: Color) => {
@@ -208,8 +259,8 @@ function corn(stage: Stage): BufferGeometry {
       r: [0.4 * Math.sin(k), 0, 0.5 * Math.cos(k * 2)],
     }),
   );
-  return merge([
-    part(cob, (p) => (Math.sin(p.y * 95) < -0.2 || Math.sin(Math.atan2(p.z, p.x) * 14) < -0.3 ? kernelDark : body), { p: [0, 0.38, 0] }),
+  return mergeCrop([
+    part(smooth(cob), (p) => (Math.sin(p.y * 95) < -0.2 || Math.sin(Math.atan2(p.z, p.x) * 14) < -0.3 ? kernelDark : body), { p: [0, 0.38, 0] }),
     husk(0, -0.32, 0.54, lc),
     husk(Math.PI, -0.3, 0.5, ll),
     husk(Math.PI / 2, -0.22, 0.42, shade(lc, 0.92)),
@@ -233,14 +284,13 @@ function eggplant(stage: Stage): BufferGeometry {
     [0.05, 0.575],
     [0, 0.585],
   ].map(([x, y]) => new Vector2(x, y));
-  const g = new LatheGeometry(pts, 14);
+  const g = new LatheGeometry(pts, 20);
   const pos = g.getAttribute('position');
   const v = new Vector3();
   for (let i = 0; i < pos.count; i++) {
     v.fromBufferAttribute(pos, i);
     pos.setX(i, v.x + 0.34 * v.y * v.y);
   }
-  g.computeVertexNormals();
   const lc = leafColor(stage);
   const sheen = body.clone().lerp(new Color('#C9B4EA'), 0.45);
   const cap = Array.from({ length: 5 }, (_, i) => {
@@ -253,8 +303,8 @@ function eggplant(stage: Stage): BufferGeometry {
     c2.translate(0.1, 0.57, 0);
     return part(c2, i % 2 ? lc : shade(lc, 0.88));
   });
-  return merge([
-    part(g, (p) => (p.x < -0.1 && p.y > 0.12 && p.y < 0.34 ? sheen : body), { p: [-0.07, 0.03, 0] }),
+  return mergeCrop([
+    part(smooth(g), (p) => (p.x < -0.1 && p.y > 0.12 && p.y < 0.34 ? sheen : body), { p: [-0.07, 0.03, 0] }),
     part(new SphereGeometry(0.07, 10, 6), lc, { p: [0.09, 0.59, 0], s: [1, 0.55, 1] }),
     ...cap,
     part(new CylinderGeometry(0.018, 0.026, 0.11, 6), shade(lc, 0.85), { p: [0.12, 0.66, 0], r: [0, 0, -0.4] }),
@@ -272,7 +322,7 @@ function blueberry(stage: Stage): BufferGeometry {
   ];
   const parts: BufferGeometry[] = [];
   for (const [x, y, z, r] of berries) {
-    const sph = new SphereGeometry(r, 11, 7);
+    const sph = new SphereGeometry(r, 12, 8);
     parts.push(part(sph, (p) => (p.y > 0.04 ? bloom : body), { p: [x, y, z], s: [1, 0.92, 1] }));
     for (let k = 0; k < 5; k++) {
       const a = (k / 5) * Math.PI * 2;
@@ -288,7 +338,7 @@ function blueberry(stage: Stage): BufferGeometry {
   parts.push(part(new SphereGeometry(1, 8, 6), lc, { p: [0.04, 0.32, -0.2], r: [0.7, 0.3, 0.2], s: [0.11, 0.018, 0.2] }));
   parts.push(part(new SphereGeometry(1, 8, 6), leafColor(stage, true), { p: [-0.1, 0.3, -0.2], r: [0.7, -0.5, -0.3], s: [0.08, 0.016, 0.15] }));
   parts.push(part(new CylinderGeometry(0.01, 0.014, 0.2, 5), shade(lc, 0.8), { p: [0, 0.27, -0.1], r: [0.55, 0, 0] }));
-  return merge(parts);
+  return mergeCrop(parts);
 }
 
 const BUILDERS: Record<CropId, (s: Stage) => BufferGeometry> = { carrot, tomato, corn, eggplant, blueberry };

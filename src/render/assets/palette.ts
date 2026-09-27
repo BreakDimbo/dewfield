@@ -25,9 +25,16 @@ export const PAL = {
 } as const;
 
 const tmp = { h: 0, s: 0, l: 0 };
-const SPROUT_TINT = new Color('#A9CB8C');
 
 const LADDER_STEP = 0.07;
+
+/** Hue interpolation along the shorter arc of the colour wheel (red → orange → yellow-green, not via purple). */
+function towardHue(h: number, target: number, t: number): number {
+  let d = target - h;
+  if (d > 0.5) d -= 1;
+  if (d < -0.5) d += 1;
+  return (h + d * t + 1) % 1;
+}
 
 /** Raise lightness until the colour's luma clears `floor` (keeps hue and saturation). */
 function liftAbove(c: Color, floor: number): Color {
@@ -42,21 +49,21 @@ function liftAbove(c: Color, floor: number): Color {
 }
 
 /**
- * RD-2: unripe −35% saturation and +0.15 lightness; sprouts −45% and +0.30, tinted young green
- * (readability-greybox.md round 2). Each step is also lifted so the three stages differ by
- * at least LADDER_STEP in greyscale luma — needed for bright hues (corn) where desaturation alone darkens.
+ * RD-2 stage colours (00 D-36). Young fruit is greener, not whiter: the hue moves from the ripe colour towards the
+ * crop's `young` colour (half-way when unripe, fully for sprouts), unripe keeps 65% of the ripe saturation
+ * (−35%) and sprouts 55%. Each step is then lifted so the three stages differ by at least LADDER_STEP in luma.
  */
-export function stageColor(hex: string, stage: Stage): Color {
+export function stageColor(hex: string, stage: Stage, young: string = hex): Color {
   const ripe = new Color(hex);
   if (stage === 2) return ripe;
   ripe.getHSL(tmp);
   const base = { ...tmp };
-  const unripe = new Color().setHSL(base.h, base.s * 0.65, Math.min(1, base.l + 0.15));
+  new Color(young).getHSL(tmp);
+  const youngHue = tmp.h;
+  const unripe = new Color().setHSL(towardHue(base.h, youngHue, 0.5), base.s * 0.65, Math.min(1, base.l + 0.04));
   liftAbove(unripe, luminance(ripe) + LADDER_STEP);
   if (stage === 1) return unripe;
-  const sprout = new Color()
-    .setHSL(base.h, base.s * 0.55, Math.min(1, base.l + 0.3))
-    .lerp(SPROUT_TINT, 0.22);
+  const sprout = new Color().setHSL(towardHue(base.h, youngHue, 1), base.s * 0.55, Math.min(1, base.l + 0.08));
   return liftAbove(sprout, luminance(unripe) + LADDER_STEP);
 }
 
@@ -67,7 +74,7 @@ export function luminance(c: Color): number {
   return 0.2126 * rgb.r + 0.7152 * rgb.g + 0.0722 * rgb.b;
 }
 
-export const cropColor = (crop: CropId, stage: Stage): Color => stageColor(CROP_BY_ID[crop].color, stage);
+export const cropColor = (crop: CropId, stage: Stage): Color => stageColor(CROP_BY_ID[crop].color, stage, CROP_BY_ID[crop].young);
 
 /** Young leaves are fresher, ripe leaves deeper. */
 export function leafColor(stage: Stage, light = false): Color {

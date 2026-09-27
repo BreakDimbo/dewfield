@@ -3,7 +3,7 @@ import { Canvas, useThree } from '@react-three/fiber';
 import { Suspense, use, useEffect, useState, type ReactNode } from 'react';
 import { useAppStore } from '@/state/appStore';
 import { effectiveTier, MAX_FLIPS, QUALITY_START, qualityStep } from './quality';
-import { ACESFilmicToneMapping, SRGBColorSpace } from 'three';
+import { NeutralToneMapping, SRGBColorSpace } from 'three';
 import { gameCfg } from '@/state/config';
 import { CameraRig } from './camera/CameraRig';
 import { FieldView } from './field/FieldView';
@@ -68,7 +68,8 @@ export function Stage() {
       frameloop="always"
       camera={{ fov: 32, near: 0.1, far: 220, position: [8, 9, 16] }}
       onCreated={({ gl }) => {
-        gl.toneMapping = ACESFilmicToneMapping;
+        // Khronos PBR Neutral keeps authored base colours (02 §16.1) instead of ACES's desaturated, shifted midtones.
+        gl.toneMapping = NeutralToneMapping;
         gl.outputColorSpace = SRGBColorSpace;
       }}
       style={{ position: 'fixed', inset: 0 }}

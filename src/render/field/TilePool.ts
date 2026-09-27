@@ -47,6 +47,7 @@ export interface Highlight {
 
 const tmpM = new Matrix4();
 const tmpQ = new Quaternion();
+const tmpQ2 = new Quaternion();
 const tmpS = new Vector3();
 const tmpP = new Vector3();
 const tmpC = new Color();
@@ -230,7 +231,9 @@ export class TilePool implements TileAdapter {
       const isHint =
         !!hl.hint && settled && ((hl.hint.a.x === rx && hl.hint.a.y === ry) || (hl.hint.b.x === rx && hl.hint.b.y === ry));
       const stage = t.kind === 'crop' ? (Math.min(2, t.stage + this.previewGrowth) as Stage) : 2;
-      const base = t.kind === 'bee' ? 1.4 : STAGE_SCALE[stage];
+      // Per-tile variety (uid-seeded, stable): ±4% size so a field of one crop is not a row of clones.
+      const vary = t.kind === 'bee' ? 1 : 1 + 0.04 * Math.sin(s.phase * 3.7);
+      const base = (t.kind === 'bee' ? 1.4 : STAGE_SCALE[stage]) * vary;
       const sc = base * s.pop * (isSel ? 1.08 : 1);
       const ripeBob = hl.idle && t.kind === 'crop' && stage === 2 ? 0.014 * Math.sin(time * 2.1 + s.phase) : 0;
       const beeHover = t.kind === 'bee' ? 0.08 + 0.04 * Math.sin(time * 5 + s.phase) : 0;
@@ -241,9 +244,12 @@ export class TilePool implements TileAdapter {
       const sq = s.squash;
       tmpP.set(X, SOIL + lift, Z);
       tmpS.set(sc * (1 - sq * 0.5), sc * (1 + sq), sc * (1 - sq * 0.5));
-      tmpQ.identity();
       if (t.kind === 'bee') tmpQ.setFromAxisAngle(UP, Math.sin(time * 1.3 + s.phase) * 0.6);
-      else if (wiggle) tmpQ.setFromAxisAngle(FWD, wiggle);
+      else {
+        // A stable yaw per tile (±35°, kept small so every crop still faces the camera with its readable side).
+        tmpQ.setFromAxisAngle(UP, 0.6 * Math.sin(s.phase * 5.3));
+        if (wiggle) tmpQ.premultiply(tmpQ2.setFromAxisAngle(FWD, wiggle));
+      }
       s.mesh.matrix.compose(tmpP, tmpQ, tmpS);
       s.mesh.matrixWorldNeedsUpdate = true;
 

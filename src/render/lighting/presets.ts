@@ -33,7 +33,7 @@ export const PRESETS: Record<'morning' | 'dusk' | 'night', LightPreset> = {
     domeTop: c('#BFD6DE'),
     domeHorizon: c('#F6EFE4'),
     domeGlow: c('#FFF4DE'),
-    exposure: 1.0,
+    exposure: 0.9,
   },
   dusk: {
     sky: c('#FBE3CF'),
@@ -48,7 +48,7 @@ export const PRESETS: Record<'morning' | 'dusk' | 'night', LightPreset> = {
     domeTop: c('#C9B6C8'),
     domeHorizon: c('#F7D9C2'),
     domeGlow: c('#FFD2A6'),
-    exposure: 0.98,
+    exposure: 0.88,
   },
   night: {
     sky: c('#6E7FA6'),
