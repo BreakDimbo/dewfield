@@ -53,3 +53,13 @@ describe('audio (P2-12)', () => {
     expect(() => s.music('morning')).not.toThrow();
   });
 });
+
+describe('cascade ladder cap (tunables.audio.cascadeMaxSteps)', () => {
+  it('respects a smaller cap and never indexes past the ladder', () => {
+    expect(cascadeRate(8, 4)).toBe(cascadeRate(4));
+    expect(Number.isFinite(cascadeRate(20, 20))).toBe(true);
+    const { e, plays } = fake();
+    cueToSound(e, { t: 'match', depth: 7, size: 3 }, 3);
+    expect(plays[0]!.rate).toBeCloseTo(cascadeRate(3));
+  });
+});
