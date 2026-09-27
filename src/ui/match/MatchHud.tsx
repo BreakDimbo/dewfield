@@ -6,6 +6,7 @@ import { useRunStore } from '@/state/runStore';
 import { useUiStore } from '@/state/uiStore';
 import { runController } from '@/state/controllers/runController';
 import { CropIcon, DewIcon } from '@/ui/common/CropIcon';
+import { motionScale } from '@/ui/common/motion';
 import ui from '@/ui/common/ui.module.css';
 import { CLIENT_LINE, S } from '@/ui/strings/zh-CN';
 import css from './match.module.css';
@@ -108,7 +109,7 @@ function launch(layer: HTMLDivElement, id: number, crop: CropId, x: number, y: n
       { transform: `translate(calc(-50% + ${tx * 0.35}px), calc(-50% + ${ty * 0.25 + lift}px)) scale(1.15)`, opacity: 1, offset: 0.35 },
       { transform: `translate(calc(-50% + ${tx}px), calc(-50% + ${ty}px)) scale(0.55)`, opacity: 0.9 },
     ],
-    { duration: 520, easing: 'cubic-bezier(0.45, 0, 0.2, 1)', fill: 'forwards' },
+    { duration: 520 / motionScale(), easing: 'cubic-bezier(0.45, 0, 0.2, 1)', fill: 'forwards' },
   ).onfinish = done;
 }
 

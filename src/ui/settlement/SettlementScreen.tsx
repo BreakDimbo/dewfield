@@ -32,7 +32,7 @@ export function SettlementScreen({ settlement: s, commission, onClose }: Settlem
         {won && s.stars !== null && (
           <div className={css.stars} aria-label={`${s.stars} 星`}>
             {[1, 2, 3].map((k) => (
-              <span key={k} className={css.star} data-on={k <= s.stars!} style={{ animationDelay: `${300 + k * 160}ms` }}>
+              <span key={k} className={css.star} data-on={k <= s.stars!} style={{ animationDelay: `calc(${300 + k * 160}ms * var(--motion))` }}>
                 ★
               </span>
             ))}

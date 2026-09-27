@@ -68,7 +68,7 @@
 .seg button {
   border: 0;
   background: transparent;
-  min-height: 36px;
+  min-height: var(--hit);
   padding: 0 14px;
   border-radius: var(--r-pill);
   cursor: pointer;

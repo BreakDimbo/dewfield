@@ -3,7 +3,7 @@
   inset: 0;
   pointer-events: none;
   z-index: 10;
-  animation: hudIn 520ms var(--ease-out) both;
+  animation: hudIn calc(520ms * var(--motion)) var(--ease-out) both;
 }
 .hud button,
 .hud .orderBar {
@@ -56,7 +56,7 @@
   place-items: center;
 }
 .iconWrap[data-bump='true'] {
-  animation: bump 420ms var(--ease-spring);
+  animation: bump calc(420ms * var(--motion)) var(--ease-spring);
 }
 .ring {
   position: absolute;
@@ -73,7 +73,7 @@
   stroke: var(--c-sage);
   stroke-width: 3;
   stroke-linecap: round;
-  transition: stroke-dashoffset 420ms var(--ease-spring);
+  transition: stroke-dashoffset calc(420ms * var(--motion)) var(--ease-spring);
 }
 .left {
   font-size: 26px;
@@ -95,7 +95,7 @@
   padding: 1px 6px;
   border-radius: var(--r-pill);
   box-shadow: var(--shadow-1);
-  animation: pop 220ms var(--ease-spring);
+  animation: pop calc(220ms * var(--motion)) var(--ease-spring);
 }
 .divider {
   width: 1px;
@@ -115,7 +115,7 @@
   font-size: 30px;
   font-weight: 700;
   line-height: 1.1;
-  animation: tick 300ms var(--ease-spring);
+  animation: tick calc(300ms * var(--motion)) var(--ease-spring);
 }
 .moves[data-low='true'] .movesNum {
   color: var(--c-clay-deep);
@@ -143,7 +143,7 @@
   font-weight: 700;
 }
 .dew[data-bump='true'] {
-  animation: bump 380ms var(--ease-spring);
+  animation: bump calc(380ms * var(--motion)) var(--ease-spring);
 }
 .bottom {
   position: absolute;
@@ -164,13 +164,13 @@
   border-radius: var(--r-pill);
   font-size: var(--fs-sm);
   color: var(--c-ink-2);
-  animation: pop 420ms var(--ease-spring);
+  animation: pop calc(420ms * var(--motion)) var(--ease-spring);
 }
 .skipHint {
   font-size: var(--fs-xs);
   color: var(--c-ink-3);
   letter-spacing: 0.12em;
-  animation: fade 900ms ease-in-out infinite alternate;
+  animation: fade calc(900ms * var(--motion)) ease-in-out infinite alternate;
 }
 .flyer {
   position: fixed;
@@ -194,14 +194,14 @@
   color: var(--c-charcoal);
   background: color-mix(in srgb, var(--c-paper) 86%, transparent);
   box-shadow: var(--shadow-2);
-  animation: bannerIn 900ms var(--ease-spring) both;
+  animation: bannerIn calc(900ms * var(--motion)) var(--ease-spring) both;
   white-space: nowrap;
 }
 .banner[data-tone='order'] {
   background: var(--c-sage);
   color: var(--c-linen);
   font-size: 20px;
-  animation-duration: 1600ms;
+  animation-duration: calc(1600ms * var(--motion));
 }
 .banner[data-tone='special'] {
   background: color-mix(in srgb, var(--c-cream) 92%, transparent);

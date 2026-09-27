@@ -23,7 +23,7 @@
 .star {
   font-size: 26px;
   color: color-mix(in srgb, var(--c-charcoal) 12%, transparent);
-  animation: starIn 520ms var(--ease-spring) both;
+  animation: starIn calc(520ms * var(--motion)) var(--ease-spring) both;
 }
 .star[data-on='true'] {
   color: var(--c-gold);
@@ -58,7 +58,7 @@
   height: 100%;
   border-radius: inherit;
   background: linear-gradient(90deg, var(--c-sage), var(--c-sage-light));
-  animation: grow 900ms var(--ease-out) 200ms both;
+  animation: grow calc(900ms * var(--motion)) var(--ease-out) calc(200ms * var(--motion)) both;
   transform-origin: left;
 }
 .need {

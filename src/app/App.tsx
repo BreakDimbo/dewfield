@@ -9,6 +9,7 @@ import { useRunStore } from '@/state/runStore';
 import { telemetry } from '@/state/telemetryLogger';
 import { useUiStore } from '@/state/uiStore';
 import { CommissionCard } from '@/ui/hub/CommissionCard';
+import { useMotionAttr } from '@/ui/common/motion';
 import { HubHud } from '@/ui/hub/HubHud';
 import { MatchHud } from '@/ui/match/MatchHud';
 import { Blockers } from '@/ui/overlays/Blockers';
@@ -60,6 +61,7 @@ export function App() {
   const paused = useRunStore((s) => s.paused);
   const lastCommission = useRunStore((s) => s.run?.commission);
   const [commissionAtEnd, setCommissionAtEnd] = useState(lastCommission);
+  useMotionAttr();
 
   useEffect(() => {
     telemetry.start({

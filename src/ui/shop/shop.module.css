@@ -51,7 +51,7 @@
   background: var(--c-sage-soft);
 }
 .item[data-fresh='true'] {
-  animation: bought 700ms var(--ease-spring);
+  animation: bought calc(700ms * var(--motion)) var(--ease-spring);
 }
 .swatch {
   width: 44px;
