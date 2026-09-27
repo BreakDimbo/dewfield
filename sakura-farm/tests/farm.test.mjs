@@ -36,13 +36,13 @@ test('hoe → seed → water: a watered night grows the seed into a sprout', () 
 
 test('actions explain why they cannot happen', () => {
   const s = newGame(1);
-  assert.match(act(s, 0, 'seeds', 'sakura').reason, /耕/);
-  assert.match(act(s, 0, 'can').reason, /耕/);
+  assert.match(act(s, 0, 'seeds', 'sakura').reason, /松土/);
+  assert.match(act(s, 0, 'can').reason, /松土/);
   const t = ok(act(s, 0, 'hoe'));
-  assert.match(act(t, 0, 'hoe').reason, /もう耕/);
-  assert.match(act(t, 0, 'seeds', 'kaki').reason, /柿の種がありません/);
+  assert.match(act(t, 0, 'hoe').reason, /已经松过土/);
+  assert.match(act(t, 0, 'seeds', 'kaki').reason, /没有柿的种子/);
   const w = ok(act(ok(act(t, 0, 'seeds', 'sakura')), 0, 'can'));
-  assert.match(act(w, 0, 'can').reason, /もう水/);
+  assert.match(act(w, 0, 'can').reason, /已经浇过水/);
   assert.equal(act(s, 99, 'hoe').ok, false);
 });
 

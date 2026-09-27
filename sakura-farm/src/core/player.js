@@ -28,7 +28,7 @@ export class Player {
     addEventListener('keydown', (e) => {
       if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT')) return;
       this.keys.add(e.code);
-      if (e.code === 'KeyF') this.fly = !this.fly;
+      if (e.code === 'KeyF' && this.allowFly !== false) this.fly = !this.fly; // sakura-farm: main.js sets allowFly (?fly)
       if (e.code === 'Space' && this.enabled && (this.onGround || this.fly)) { if (!this.fly) this.vy = 4.2; e.preventDefault(); }
     });
     addEventListener('keyup', (e) => this.keys.delete(e.code));

@@ -9,6 +9,7 @@ import { batchStatic } from './core/batch.js';
 import { batchStatic as batchStatic2 } from './core/batch2.js';
 import { createAudio } from './core/audio.js';
 import { createGame } from './game/controller.js';
+import { startFarmUi } from './ui/farmui.js';
 
 export const MODULES = [
   'environment', 'street', 'poles', 'railway', 'station', 'plaza', 'shopsA', 'shopsB', 'houses', 'farm',
@@ -128,7 +129,9 @@ function parseCam(s) {
 }
 window.__setCam = (x, y, z, yaw, pitch) => { if (y === null || y === undefined) player.setPose(x, z, yaw, pitch); else player.setPose(x, z, yaw, pitch, y); };
 
+// sakura-farm: Shift+1…6 teleport (plain digits are the hotbar).
 const VIEWS = {
+  Digit6: { ...L.FARM.spawn, label: 'ふれあい農園' },
   Digit1: { ...L.HERO, label: '商店街' },
   Digit2: { x: 9.5, z: -9.0, yaw: 12, pitch: 6, label: '駅前広場' },
   Digit3: { x: 20.0, z: -37.6, yaw: 95, pitch: 0, label: '1番線ホーム' },
@@ -223,8 +226,10 @@ function start() {
 
 async function main() {
   await build();
-  if (params.get('cam')) parseCam(params.get('cam')); else player.setPose(L.HERO.x, L.HERO.z, L.HERO.yaw, L.HERO.pitch);
+  if (params.get('cam')) parseCam(params.get('cam')); else player.setPose(L.FARM.spawn.x, L.FARM.spawn.z, L.FARM.spawn.yaw, L.FARM.spawn.pitch);
+  player.allowFly = params.has('fly');
   if (params.has('fly')) player.fly = true;
+  window.__farm = startFarmUi(ctx, { player, canvas, isPlaying: () => started, shot: SHOT });
   if (simT > 0) window.__sim(simT); else stepUpdates(0, 0);
   sky.update(simT, camera);
   requestAnimationFrame(frame);
@@ -243,9 +248,9 @@ async function main() {
     if (!started) return;
     if (e.code === 'KeyH') document.body.classList.toggle('noui');
     if (e.code === 'KeyM') { audio.muted = !audio.muted; const b = $('mute'); if (b) b.setAttribute('aria-pressed', String(audio.muted)); }
-    if (e.code === 'KeyR') player.setPose(L.HERO.x, L.HERO.z, L.HERO.yaw, L.HERO.pitch);
+    if (e.code === 'Home') player.setPose(L.FARM.spawn.x, L.FARM.spawn.z, L.FARM.spawn.yaw, L.FARM.spawn.pitch);
     if (e.code === 'Backquote') { const s = $('stats'); if (s) s.hidden = !s.hidden; }
-    const v = VIEWS[e.code]; if (v) { player.fly = false; player.setPose(v.x, v.z, v.yaw, v.pitch); }
+    const v = e.shiftKey && VIEWS[e.code]; if (v) { player.fly = false; player.setPose(v.x, v.z, v.yaw, v.pitch); }
   });
   const q = $('quality');
   if (q) { q.value = qName; q.addEventListener('change', () => { try { localStorage.setItem('sakura.q', q.value); } catch (e) {} location.reload(); }); }

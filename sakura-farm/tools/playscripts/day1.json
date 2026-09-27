@@ -1,0 +1,18 @@
+[
+  { "cam": [-30.75, -75.4, 0, -40], "frames": 4, "shot": "hoe-prompt" },
+  { "use": true, "frames": 3 },
+  { "key": "Digit2", "frames": 2 },
+  { "use": true, "frames": 3 },
+  { "key": "Digit3", "frames": 2 },
+  { "use": true, "frames": 4, "shot": "planted-watered" },
+  { "use": true, "frames": 2, "shot": "already-watered" },
+  { "key": "Tab", "frames": 2, "shot": "panel" },
+  { "key": "Tab" },
+  { "cam": [-25.6, -73.2, 0, -12], "frames": 3, "shot": "stall" },
+  { "cam": [-20.8, -76.4, 0, -8], "frames": 3, "shot": "shed-early" },
+  { "eval": "(window.__game.tick(700), window.__game.state.minute)" },
+  { "frames": 2, "use": true, "wait": 2500, "shot": "morning" },
+  { "key": "Enter", "frames": 3 },
+  { "eval": "JSON.stringify({day: window.__game.state.day, p7: window.__game.state.plots[7]})" },
+  { "cam": [-30.75, -75.4, 0, -32], "frames": 4, "shot": "day2-sprout" }
+]

@@ -30,7 +30,7 @@ export function preview(state, i, tool, speciesId) {
 /** Apply `tool` to plot `i`. `speciesId` is the seed chosen in the seed bag. */
 export function act(state, i, tool, speciesId) {
   const plot = state.plots[i];
-  if (!plot) return fail(state, 'ここには畑がありません');
+  if (!plot) return fail(state, '这里没有田');
   const inv = state.inventory;
   const sp = plot.species && SPECIES_BY_ID[plot.species];
   const done = (label, mutate, events = []) => {
@@ -40,15 +40,15 @@ export function act(state, i, tool, speciesId) {
   };
   switch (tool) {
     case 'hoe':
-      if (plot.stage !== STAGE.EMPTY) return fail(state, plot.stage === STAGE.TILLED ? 'もう耕してあります' : '木が育っています');
-      return done('耕す', (_, p) => (p.stage = STAGE.TILLED));
+      if (plot.stage !== STAGE.EMPTY) return fail(state, plot.stage === STAGE.TILLED ? '已经松过土了' : '这里正长着树');
+      return done('松土', (_, p) => (p.stage = STAGE.TILLED));
     case 'seeds': {
-      if (plot.stage === STAGE.EMPTY) return fail(state, 'まず鍬で耕しましょう');
-      if (plot.stage !== STAGE.TILLED) return fail(state, 'もう植えてあります');
+      if (plot.stage === STAGE.EMPTY) return fail(state, '先用锄头松土');
+      if (plot.stage !== STAGE.TILLED) return fail(state, '已经种下了');
       const s = SPECIES_BY_ID[speciesId];
-      if (!s) return fail(state, '種を選んでください');
-      if (!inv.seeds[speciesId]) return fail(state, `${s.name}の種がありません`);
-      return done(`${s.name}の種をまく`, (_, p, v) => {
+      if (!s) return fail(state, '请选择要种的树');
+      if (!inv.seeds[speciesId]) return fail(state, `没有${s.name}的种子`);
+      return done(`种下${s.name}`, (_, p, v) => {
         p.stage = STAGE.SEED;
         p.species = speciesId;
         p.growth = 0;
@@ -56,42 +56,42 @@ export function act(state, i, tool, speciesId) {
       });
     }
     case 'can':
-      if (plot.stage < STAGE.SEED) return fail(state, plot.stage === STAGE.TILLED ? 'まだ何も植えていません' : '耕して種をまきましょう');
-      if (plot.watered) return fail(state, '今日はもう水をやりました');
-      if (!inv.water) return fail(state, 'じょうろの水がありません（屋台で手に入ります）');
-      return done('水をやる', (_, p, v) => {
+      if (plot.stage < STAGE.SEED) return fail(state, plot.stage === STAGE.TILLED ? '还没有种东西' : '先松土、播种');
+      if (plot.watered) return fail(state, '今天已经浇过水了');
+      if (!inv.water) return fail(state, '水壶没水了（去种子摊玩一局）');
+      return done('浇水', (_, p, v) => {
         p.watered = true;
         v.water -= 1;
       });
     case 'fert':
-      if (plot.stage < STAGE.SEED) return fail(state, '植えてある畑に使います');
-      if (plot.stage === STAGE.MATURE) return fail(state, 'もう大きく育っています');
-      if (plot.fert) return fail(state, '肥料はもう効いています');
-      if (!inv.fert) return fail(state, '肥料がありません');
-      return done('肥料をやる', (_, p, v) => {
+      if (plot.stage < STAGE.SEED) return fail(state, '要用在种了树的田上');
+      if (plot.stage === STAGE.MATURE) return fail(state, '已经长成大树了');
+      if (plot.fert) return fail(state, '肥料已经在起作用了');
+      if (!inv.fert) return fail(state, '没有肥料了');
+      return done('施肥', (_, p, v) => {
         p.fert = true;
         v.fert -= 1;
       });
     case 'shears':
       if (waitsForPruning(plot)) {
-        if (!inv.shears) return fail(state, '剪定ばさみがありません');
-        return done('枝を整える', (_, p, v) => {
+        if (!inv.shears) return fail(state, '没有剪刀了');
+        return done('修整松枝', (_, p, v) => {
           p.pruned = true;
           v.shears -= 1;
         });
       }
-      if (plot.stage !== STAGE.MATURE) return fail(state, sp?.needsPruning ? '若木になったら整えます' : '成木になったら剪定できます');
-      if (plot.pruned) return fail(state, 'もう剪定してあります');
-      if (!inv.shears) return fail(state, '剪定ばさみがありません');
-      return done('剪定する', (_, p, v) => {
+      if (plot.stage !== STAGE.MATURE) return fail(state, sp?.needsPruning ? '长成小树后再修整' : '长成成树后才能修剪');
+      if (plot.pruned) return fail(state, '已经修剪过了');
+      if (!inv.shears) return fail(state, '没有剪刀了');
+      return done('修剪', (_, p, v) => {
         p.pruned = true;
         v.shears -= 1;
       });
     case 'basket': {
-      if (plot.stage !== STAGE.MATURE) return fail(state, plot.stage >= STAGE.SEED ? `まだ${STAGE_NAMES[plot.stage]}です` : '収穫するものがありません');
-      if (!plot.produce) return fail(state, `${sp.produce}はまだです`);
+      if (plot.stage !== STAGE.MATURE) return fail(state, plot.stage >= STAGE.SEED ? `还只是${STAGE_NAMES[plot.stage]}` : '没有可收获的东西');
+      if (!plot.produce) return fail(state, `${sp.produce}还没长出来`);
       const n = plot.produce;
-      return done(`${sp.produce}を収穫（${n}）`, (s, p, v) => {
+      return done(`收获${sp.produce} ×${n}`, (s, p, v) => {
         v.produce[p.species] += n;
         s.dex.harvested[p.species] = (s.dex.harvested[p.species] ?? 0) + n;
         p.produce = 0;
@@ -163,7 +163,7 @@ export function nextDay(state) {
 /** Trade `producePerTicket` produce (most plentiful kinds first) for one extra match-3 ticket. */
 export function tradeForTicket(state) {
   const total = SPECIES_IDS.reduce((a, id) => a + state.inventory.produce[id], 0);
-  if (total < FARM_RULES.producePerTicket) return fail(state, `収穫物が${FARM_RULES.producePerTicket}つ必要です`);
+  if (total < FARM_RULES.producePerTicket) return fail(state, `需要 ${FARM_RULES.producePerTicket} 个收获物`);
   const s = clone(state);
   let left = FARM_RULES.producePerTicket;
   const order = [...SPECIES_IDS].sort((a, b) => s.inventory.produce[b] - s.inventory.produce[a]);
@@ -177,7 +177,7 @@ export function tradeForTicket(state) {
 }
 
 export function useTicket(state) {
-  if (state.tickets <= 0) return fail(state, '今日の券はもうありません');
+  if (state.tickets <= 0) return fail(state, '今天的券用完了');
   const s = clone(state);
   s.tickets -= 1;
   return { ok: true, state: s, events: [] };
