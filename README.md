@@ -7,6 +7,10 @@
 | 消消乐 | “我算到了，还炸得比想的好看。” |
 | 种田 | “这块地因为我照料过，更像我的了。” |
 
+## 新方向：sakura-farm（第一人称种树）
+
+[`sakura-farm/`](sakura-farm/README.md) 是按 [sakuragaoka-station](https://github.com/Kenton-GMI/sakuragaoka-station) 的实现方式重做的版本：纯 JS + three.js、无构建，在日式小镇里第一人称走到农园，8 块田种出六种树，按游戏内日夜生长；消消乐只在种子摊上产出种子和农具。它和下面的 TypeScript 版本互相独立，是否移除旧版本由你决定。
+
 ## 当前状态
 
 **工程侧完成，等待真人验收。** Phase 0–2 中所有能由工程完成的任务都已完成，并有测试或报告作证据；`bash scripts/ci.sh` 通过，e2e 15 条全部通过。仍未勾选的任务都卡在需要真人或真机的验收项上：PT1 / PT2 试玩、灰度可读性与海报测试的真人评审、正式美术、核显笔记本与 iPad 实机帧率、iPad Safari 音频与手势确认、线上部署。尚未打 `v0.1.0-mvp` 标签（依赖 PT2）。逐项状态见 [`docs/05-TASK-CHECKLIST.md`](docs/05-TASK-CHECKLIST.md)。

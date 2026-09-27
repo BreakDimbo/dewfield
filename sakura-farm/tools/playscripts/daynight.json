@@ -1,0 +1,8 @@
+[
+  { "eval": "(window.__game.state = { ...window.__game.state, minute: 420 }, 1)", "cam": [-44, -70.5, 20, -8], "frames": 4, "shot": "0700" },
+  { "eval": "(window.__game.state = { ...window.__game.state, minute: 780 }, 1)", "frames": 4, "shot": "1300" },
+  { "eval": "(window.__game.state = { ...window.__game.state, minute: 1060 }, 1)", "frames": 4, "shot": "1740" },
+  { "eval": "(window.__game.state = { ...window.__game.state, minute: 1140 }, 1)", "frames": 4, "shot": "1900" },
+  { "eval": "(window.__game.state = { ...window.__game.state, minute: 1320 }, 1)", "frames": 4, "shot": "2200" },
+  { "cam": [-22, -71, -20, -6], "frames": 4, "shot": "2200-shed" }
+]

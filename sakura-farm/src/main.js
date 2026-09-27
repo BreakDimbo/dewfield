@@ -10,6 +10,7 @@ import { batchStatic as batchStatic2 } from './core/batch2.js';
 import { createAudio } from './core/audio.js';
 import { createGame } from './game/controller.js';
 import { startFarmUi } from './ui/farmui.js';
+import { startDayNight } from './ui/daynight.js';
 
 export const MODULES = [
   'environment', 'street', 'poles', 'railway', 'station', 'plaza', 'shopsA', 'shopsB', 'houses', 'farm',
@@ -229,6 +230,10 @@ async function main() {
   if (params.get('cam')) parseCam(params.get('cam')); else player.setPose(L.FARM.spawn.x, L.FARM.spawn.z, L.FARM.spawn.yaw, L.FARM.spawn.pitch);
   player.allowFly = params.has('fly');
   if (params.has('fly')) player.fly = true;
+  // ?time=19:30 starts the day at that clock time (screenshots / testing)
+  const tq = /^(\d{1,2}):(\d{2})$/.exec(params.get('time') || '');
+  if (tq) game.state = { ...game.state, minute: Math.min(1439, Math.max(360, Number(tq[1]) * 60 + Number(tq[2]))) };
+  window.__daynight = startDayNight(ctx, { sky, sunDir, game, pipeline });
   window.__farm = startFarmUi(ctx, { player, canvas, isPlaying: () => started, shot: SHOT });
   if (simT > 0) window.__sim(simT); else stepUpdates(0, 0);
   sky.update(simT, camera);

@@ -9,6 +9,7 @@ import { newGame } from '../game/state.js';
 import { STAGE } from '../game/data.js';
 
 export function build(ctx) {
+  const lamps = [];
   const { L, mat, tex, physics } = ctx;
   const F = L.FARM;
   const root = new THREE.Group();
@@ -80,7 +81,7 @@ export function build(ctx) {
     straw: mat.toon('#e0c27a', { paint: 0.08 }),
     cloth: mat.toon('#5f7fa8', { paint: 0.05 }),
     red: mat.toon('#d9463b', { paint: 0.04 }),
-    lampWarm: mat.emissive('#ffd9a0', 1.3),
+    lampWarm: mat.emissive('#ffd9a0', 1.3).clone(), // own copy: src/ui/daynight.js scales it by time of day
     // soil states (dynamic — never batched)
     soilGrass: mat.toon('#c7b48a', { map: grassTex, paint: 0.1 }), // fallow: pale earth with stray grass
     soilDry: mat.toon('#b58e6c', { map: soilTex, paint: 0.07 }),
@@ -178,6 +179,8 @@ export function build(ctx) {
     // lantern by the door (glows at night: lampWarm is emissive; the lighting module dims it by day)
     const lamp = sk.box(0.22, 0.3, 0.22, M.lampWarm, [1.2, 2.0, d / 2 + 0.25]);
     lamp.name = 'shed-lamp';
+    lamp.userData.noBatch = true;
+    lamps.push(lamp);
     sk.box(0.3, 0.05, 0.3, M.trim, [1.2, 2.18, d / 2 + 0.25]);
     // tools leaning on the wall: hoe, shovel, broom; watering cans; seed sacks; a crate
     const lean = (x, len, blade) => {
@@ -234,6 +237,8 @@ export function build(ctx) {
     sk.box(0.5, 0.5, 0.04, mat.toon('#ffffff', { map: board, paint: 0.02 }), [0.85, 1.22, 0.25], [-0.3, 0, 0]);
     const lamp = sk.box(0.2, 0.28, 0.2, M.lampWarm, [-S.w / 2 + 0.2, 2.0, S.d / 2 + 0.05]);
     lamp.name = 'stall-lamp';
+    lamp.userData.noBatch = true;
+    lamps.push(lamp);
     physics.addBox(S.x, S.z, S.w, S.d, S.rotY, 0, 1.0);
   }
 
@@ -294,5 +299,7 @@ export function build(ctx) {
     shed: { x: F.shed.x, z: F.shed.z, door: { x: F.shed.x, z: F.shed.z + F.shed.d / 2 + 0.6 } },
     stall: { x: F.stall.x, z: F.stall.z, front: { x: F.stall.x, z: F.stall.z + F.stall.d / 2 + 0.7 } },
     refresh,
+    lamps,
+    lampMaterial: M.lampWarm,
   };
 }
