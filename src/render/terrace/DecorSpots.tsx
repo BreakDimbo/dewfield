@@ -1,5 +1,5 @@
 import { useFrame } from '@react-three/fiber';
-import { useMemo, useRef } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
 import {
   AdditiveBlending,
   BoxGeometry,
@@ -24,7 +24,10 @@ import { terraceLevel } from '@/core/homestead/decor';
 import { merge, part } from '@/render/assets/greybox';
 import { PAL } from '@/render/assets/palette';
 import { easeOutCubic, springOut } from '@/render/choreo/easing';
+import { nudgeCamera } from '@/render/camera/nudge';
+import { fieldRuntime } from '@/render/runtime';
 import { useAppStore } from '@/state/appStore';
+import { bus } from '@/state/bus';
 import { gameCfg } from '@/state/config';
 
 const c = (hex: string) => new Color(hex);
@@ -131,34 +134,45 @@ const PLACE: Record<DecorId, [number, number, number]> = {
   dewLanterns: [0, 0, 0],
 };
 
-function levelDressing(level: number): BufferGeometry | null {
-  const parts: BufferGeometry[] = [];
-  if (level >= 2)
-    for (const [x, z] of [
-      [-6.6, -6.4],
-      [6.6, -6.4],
-      [-6.6, 6.4],
-      [6.6, 6.4],
-    ] as const)
-      for (let k = 0; k < 6; k++)
-        parts.push(part(new IcosahedronGeometry(0.16 - k * 0.01, 1), c(k % 2 ? '#7FAE7E' : '#94BE8A'), { p: [x + Math.sin(k) * 0.12, 0.4 + k * 0.5, z + Math.cos(k) * 0.12] }));
-  if (level >= 3)
-    for (const [x, z, s] of [
-      [-7.6, 1.8, 1.2],
-      [7.4, -1.6, 1.1],
-      [-3.5, -7.2, 0.9],
-      [3.8, 7.3, 1],
-    ] as const) {
-      parts.push(part(potGeo(0.4 * s, 0.6 * s), c(PAL.clay), { p: [x, -0.3, z] }));
-      parts.push(part(new IcosahedronGeometry(0.46 * s, 1), c('#6E9E78'), { p: [x, 0.6 * s, z] }));
-      parts.push(part(new SphereGeometry(0.1 * s, 8, 6), c('#F2C6C0'), { p: [x + 0.2 * s, 0.9 * s, z + 0.2 * s] }));
-    }
-  return parts.length ? merge(parts) : null;
-}
+/** Terrace dressing added at each level; tiers stack, so level 3 shows tiers 2 and 3. */
+const TIERS: Record<number, () => BufferGeometry> = {
+  2: () =>
+    merge(
+      (
+        [
+          [-6.6, -6.4],
+          [6.6, -6.4],
+          [-6.6, 6.4],
+          [6.6, 6.4],
+        ] as const
+      ).flatMap(([x, z]) =>
+        Array.from({ length: 6 }, (_, k) =>
+          part(new IcosahedronGeometry(0.16 - k * 0.01, 1), c(k % 2 ? '#7FAE7E' : '#94BE8A'), { p: [x + Math.sin(k) * 0.12, 0.4 + k * 0.5, z + Math.cos(k) * 0.12] }),
+        ),
+      ),
+    ),
+  3: () =>
+    merge(
+      (
+        [
+          [-7.6, 1.8, 1.2],
+          [7.4, -1.6, 1.1],
+          [-3.5, -7.2, 0.9],
+          [3.8, 7.3, 1],
+        ] as const
+      ).flatMap(([x, z, s]) => [
+        part(potGeo(0.4 * s, 0.6 * s), c(PAL.clay), { p: [x, -0.3, z] }),
+        part(new IcosahedronGeometry(0.46 * s, 1), c('#6E9E78'), { p: [x, 0.6 * s, z] }),
+        part(new SphereGeometry(0.1 * s, 8, 6), c('#F2C6C0'), { p: [x + 0.2 * s, 0.9 * s, z + 0.2 * s] }),
+      ]),
+    ),
+};
+
+/** P2-13 level-up showcase: new dressing grows in, sparkles ring the terrace, the camera eases back. ≤ 1.5 s, never blocks input. */
+const SHOWCASE_GROW = 0.9;
 
 export function DecorSpots() {
   const owned = useAppStore((s) => s.home?.decor.owned);
-  const level = useAppStore((s) => (s.home ? terraceLevel(s.home, gameCfg()) : 1));
   const { group, meshes, glow, rainbow, mat } = useMemo(() => {
     const mat = new MeshStandardMaterial({ vertexColors: true, roughness: 0.7, metalness: 0 });
     const group = new Group();
@@ -184,8 +198,25 @@ export function DecorSpots() {
     return { group, meshes, glow, rainbow, mat };
   }, []);
   const born = useRef<Partial<Record<DecorId, number>>>({});
-  const dressing = useMemo(() => levelDressing(level), [level]);
-  const dressingMesh = useMemo(() => (dressing ? new Mesh(dressing, mat) : null), [dressing, mat]);
+  const tiers = useMemo(
+    () =>
+      Object.entries(TIERS).map(([lv, build]) => {
+        // own material so the tier can fade in without touching the shared one
+        const m = new Mesh(build(), mat.clone());
+        m.visible = false;
+        return { level: Number(lv), mesh: m };
+      }),
+    [mat],
+  );
+  // `pending` is set by the level-up cue and stamped with the frame clock on the next frame
+  const showcase = useRef<{ pending: boolean; start: number; level: number }>({ pending: false, start: -Infinity, level: 0 });
+  useEffect(
+    () =>
+      bus.on('cue', (cue) => {
+        if (cue.t === 'ui' && cue.name === 'levelUp') showcase.current.pending = true;
+      }),
+    [],
+  );
 
   useFrame((state) => {
     const t = state.clock.elapsedTime;
@@ -207,6 +238,29 @@ export function DecorSpots() {
       if (id === 'glassMobile') m.rotation.y = t * 0.25;
       if (id === 'irrigation') m.position.y = 0.005 * Math.sin(t * 3);
     }
+    const home = useAppStore.getState().home;
+    const level = home ? terraceLevel(home, gameCfg()) : 1;
+    const sc = showcase.current;
+    if (sc.pending) {
+      sc.pending = false;
+      sc.start = t;
+      sc.level = level;
+      fieldRuntime.current?.vfx.terraceSparkle(rm);
+      if (!rm) nudgeCamera(0.9);
+    }
+    for (const { level: lv, mesh } of tiers) {
+      mesh.visible = lv <= level;
+      if (!mesh.visible) continue;
+      const mm = mesh.material as MeshStandardMaterial;
+      const k = lv === sc.level ? Math.min(1, ((t - sc.start) * speed) / SHOWCASE_GROW) : 1;
+      const growing = k < 1;
+      if (mm.transparent !== growing) {
+        mm.transparent = growing;
+        mm.needsUpdate = true;
+      }
+      mm.opacity = growing ? easeOutCubic(Math.min(1, k * 1.6)) : 1;
+      mesh.scale.set(1, Math.max(0.001, rm ? easeOutCubic(k) : springOut(k)), 1);
+    }
     rainbow.visible = set.has('glassMobile');
     rainbow.children.forEach((d, k) => {
       ((d as Mesh).material as MeshBasicMaterial).opacity = 0.22 + 0.12 * Math.sin(t * 0.8 + k);
@@ -217,7 +271,9 @@ export function DecorSpots() {
   return (
     <>
       <primitive object={group} />
-      {dressingMesh && <primitive object={dressingMesh} />}
+      {tiers.map(({ level: lv, mesh }) => (
+        <primitive key={lv} object={mesh} />
+      ))}
     </>
   );
 }

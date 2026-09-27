@@ -9,6 +9,7 @@ import { useUiStore } from '@/state/uiStore';
 import { gameCfg } from '@/state/config';
 import { gameController } from '@/state/controllers/gameController';
 import { boardFramePoints, fitDistance, hudInsets } from './fit';
+import { cameraNudge, nudgeDistance } from './nudge';
 import { POSES, type PoseId } from './poses';
 
 const poseFor = (s: AppState): PoseId =>
@@ -22,6 +23,7 @@ const poseFor = (s: AppState): PoseId =>
 
 const FRAME = boardFramePoints();
 const goal = new Vector3();
+const back = new Vector3();
 
 interface Shot {
   pos: Vector3;
@@ -108,10 +110,18 @@ export function CameraRig() {
     const py = rm ? 0 : pointer.y * 0.1;
     par.current.lerp(goal.set(px + idleDrift, py, 0), 0.05);
     const shake = rm ? 0 : (fieldRuntime.current?.vfx.shakeAmount ?? 0) * 0.06;
+    // P2-13 transient pull-back (skipped under reduced motion)
+    if (cameraNudge.pending) {
+      cameraNudge.amount = rm ? 0 : cameraNudge.pending;
+      cameraNudge.start = clock.current;
+      cameraNudge.pending = 0;
+    }
+    const pull = nudgeDistance(clock.current - cameraNudge.start, cameraNudge.amount, cameraNudge.dur);
     camera.position.lerpVectors(a.pos, b.pos, k);
+    look.current.lerpVectors(a.target, b.target, k);
+    if (pull) camera.position.addScaledVector(back.subVectors(camera.position, look.current).normalize(), pull);
     camera.position.x += par.current.x + (Math.random() - 0.5) * shake;
     camera.position.y += par.current.y + (Math.random() - 0.5) * shake;
-    look.current.lerpVectors(a.target, b.target, k);
     camera.fov = a.fov + (b.fov - a.fov) * k;
     camera.updateProjectionMatrix();
     camera.lookAt(look.current);
