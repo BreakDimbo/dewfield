@@ -28,7 +28,8 @@ test('① day 1: T1 → T2 → guided watering → C01 → sleep → reload keep
   if (await confirm.isVisible().catch(() => false)) await confirm.click();
   await waitApp(page, 'night');
   await page.locator('[data-phase="dark"]').click();
-  await waitApp(page, 'hub');
+  // The overnight growth wave is frame-driven; skip it like the runs above (software GL can run at ~1 fps).
+  await expect.poll(async () => (await hook(page, 'skipAnimations'), app(page)), { timeout: 30_000 }).toBe('hub');
   const before = (await hook(page, 'home')) as { day: number; field: unknown; wallet: unknown };
   expect(before.day).toBe(2);
   await page.reload();
