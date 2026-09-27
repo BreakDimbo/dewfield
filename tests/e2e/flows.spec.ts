@@ -27,7 +27,11 @@ test('① day 1: T1 → T2 → guided watering → C01 → sleep → reload keep
   const confirm = page.getByRole('alertdialog').getByRole('button', { name: '入夜' });
   if (await confirm.isVisible().catch(() => false)) await confirm.click();
   await waitApp(page, 'night');
-  await page.locator('[data-phase="dark"]').click();
+  // Tap to skip the dark beat — unless it already turned to dawn on its own (it does after ~2 s; slow runners get there first).
+  await page
+    .locator('[data-phase="dark"]')
+    .click({ timeout: 2000 })
+    .catch(() => undefined);
   // The overnight growth wave is frame-driven; skip it like the runs above (software GL can run at ~1 fps).
   await expect.poll(async () => (await hook(page, 'skipAnimations'), app(page)), { timeout: 30_000 }).toBe('hub');
   const before = (await hook(page, 'home')) as { day: number; field: unknown; wallet: unknown };
