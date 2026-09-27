@@ -64,7 +64,12 @@ await dev.reload();
 views.title = await sampleStats('title');
 await dev.getByRole('button', { name: '开始' }).click();
 views.match = await sampleStats('match');
-for (const m of [[6, 5, 6, 6], [2, 2, 2, 3], [3, 5, 2, 5]]) { await H('applyMove', ...m); await H('skipAnimations'); await dev.waitForTimeout(300); }
+// Play T1 through with the scripted guide / greedy hint, like the e2e helper.
+for (let k = 0; k < 40 && (await H('getState')).app === 'match'; k++) {
+  await H('autoMove');
+  await H('skipAnimations');
+  await dev.waitForTimeout(300);
+}
 await waitApp('settlement');
 await H('closeSettlement');
 await waitApp('hub');
