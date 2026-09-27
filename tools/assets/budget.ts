@@ -1,4 +1,4 @@
-import { BufferGeometry } from 'three';
+import { type BufferGeometry } from 'three';
 import { CROP_IDS } from '../../src/core/config/crops';
 import { beeGeometry, cropGeometry, dishGeometry, markerGeometry, rimGeometry } from '../../src/render/assets/greybox';
 

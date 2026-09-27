@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { DEFAULT_TUNABLES, withTunables } from '@/core/config/tunables';
 import { createRng, deriveSeed } from '@/core/rng/rng';
-import { grid } from '@/core/testkit/grid';
+import { grid } from './testkit';
 import { scenarioBoard } from '@/core/testkit/scenario';
 import { parseBoard } from './ascii';
 import { generateBoard, legalizeBoard, shuffleBoard, wouldMatch } from './generate';

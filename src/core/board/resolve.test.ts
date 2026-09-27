@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { DEFAULT_TUNABLES, VS_TUNABLES, withTunables } from '@/core/config/tunables';
 import { createRng } from '@/core/rng/rng';
 import { applyMove } from '@/core/run/run';
-import { grid } from '@/core/testkit/grid';
+import { grid } from './testkit';
 import { mv, runFromAscii } from '@/core/testkit/runs';
 import { pickMove, scenarioRun } from '@/core/testkit/scenario';
 import { printBoard } from './ascii';
@@ -159,7 +159,7 @@ describe('resolve properties (P0-09)', () => {
 describe('neighbour ripening (P1-02, 02 §2.3)', () => {
   const EXAMPLE = `
     T1 E0 B1 M2 T0 E2 M1
-    B0 C2 C0 C1 E1 M0 T2
+    B0 C2 C0 E1 C1 M0 T2
     M1 T0 E2 B0 M0 C2 E0
     E2 M1 T1 E0 B2 T0 B1
     B0 E1 M2 T1 C0 B1 T0
@@ -167,10 +167,10 @@ describe('neighbour ripening (P1-02, 02 §2.3)', () => {
     M0 B2 C0 E1 T1 M0 B2`;
 
   it('reproduces the 02 §2.3 example', () => {
-    const board = grid(EXAMPLE);
+    const run = runFromAscii(EXAMPLE, VS_TUNABLES, {
       items: [{ crop: 'carrot', count: 5 }],
-      queue: 'T1 T1 T1',
       queue: 'M0 E0 C0',
+    });
     // Swap (3,1)↔(4,1) turns the row into the example's C2 C0 C1 triple.
     expect(findGroups(run.board.cells)).toEqual([]);
     const r = applyMove(run, mv(4, 1, 3, 1), VS_TUNABLES);
@@ -197,8 +197,8 @@ describe('neighbour ripening (P1-02, 02 §2.3)', () => {
 
   const LINE = `
     T0 E0 B0 M0 T0 E2 M1
-    B0 C2 C2 C2 E0 M0 T2
     B0 C2 C2 C2 E1 M0 T2
+    M1 T0 E2 B0 M0 C2 E0
     E2 M1 T1 E0 B2 T0 B1
     B0 E1 M2 T1 C0 B1 T0
     T2 C1 B0 M1 E2 C1 M2
@@ -223,8 +223,8 @@ describe('neighbour ripening (P1-02, 02 §2.3)', () => {
     expect(cells).not.toContain('2,2');
   });
 
-  it('sproutOnly only turns sprouts green; off disables it', async () => {
   it('sproutOnly only turns sprouts green; off disables it', () => {
+    const input = {
       board: grid(LINE),
       rng: createRng(1),
       uidCounter: 100,
@@ -239,8 +239,8 @@ describe('neighbour ripening (P1-02, 02 §2.3)', () => {
     expect(ev(off.events, 'grow')).toHaveLength(0);
   });
 
-  it('new special positions do not ripen and bees are never grown', async () => {
   it('new special positions do not ripen and bees are never grown', () => {
+    const out = settleGrid(
       {
         board: grid(`
           . C0 . . . . .
