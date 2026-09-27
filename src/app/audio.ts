@@ -16,14 +16,16 @@ export function installAudio(): void {
     engine = fallback;
     fallback.unlock();
     applyVolume();
+    fallback.mute(document.hidden);
   });
   engine = howler;
   const unlock = () => {
     engine.unlock();
     applyMusic();
   };
-  window.addEventListener('pointerdown', unlock, { passive: true });
-  window.addEventListener('keydown', unlock);
+  // iOS only grants audio on touchend/click (not pointerdown), so listen to all of them; unlock is idempotent.
+  for (const ev of ['pointerdown', 'pointerup', 'touchend', 'click', 'keydown'] as const)
+    window.addEventListener(ev, unlock, { passive: true, capture: true });
   document.addEventListener('visibilitychange', () => engine.mute(document.hidden));
   function applyVolume() {
     const v = useAppStore.getState().settings.volume;

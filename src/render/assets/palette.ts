@@ -1,4 +1,4 @@
-import { Color } from 'three';
+import { Color, SRGBColorSpace } from 'three';
 import { CROP_BY_ID, type CropId } from '@/core/config/crops';
 import type { Stage } from '@/core/board/model';
 
@@ -27,13 +27,43 @@ export const PAL = {
 const tmp = { h: 0, s: 0, l: 0 };
 const SPROUT_TINT = new Color('#A9CB8C');
 
-/** RD-2: unripe −35% saturation; sprouts paler still so the three stages read in greyscale too. */
+const LADDER_STEP = 0.07;
+
+/** Raise sRGB lightness until the colour's luma clears `floor` (keeps hue and saturation). */
+function liftAbove(c: Color, floor: number): Color {
+  c.getHSL(tmp, SRGBColorSpace);
+  const { h, s } = tmp;
+  let l = tmp.l;
+  while (luminance(c) < floor && l < 1) {
+    l = Math.min(1, l + 0.01);
+    c.setHSL(h, s, l, SRGBColorSpace);
+  }
+  return c;
+}
+
+/**
+ * RD-2: unripe −35% saturation; sprouts paler still. Each step is also lifted so the three stages differ by
+ * at least LADDER_STEP in greyscale luma — needed for bright hues (corn) where desaturation alone darkens.
+ */
 export function stageColor(hex: string, stage: Stage): Color {
-  const c = new Color(hex);
-  if (stage === 2) return c;
-  c.getHSL(tmp);
-  if (stage === 1) return c.setHSL(tmp.h, tmp.s * 0.65, Math.min(1, tmp.l + 0.04));
-  return c.setHSL(tmp.h, tmp.s * 0.55, Math.min(1, tmp.l + 0.05)).lerp(SPROUT_TINT, 0.22);
+  const ripe = new Color(hex);
+  if (stage === 2) return ripe;
+  ripe.getHSL(tmp, SRGBColorSpace);
+  const base = { ...tmp };
+  const unripe = new Color().setHSL(base.h, base.s * 0.65, Math.min(1, base.l + 0.04), SRGBColorSpace);
+  liftAbove(unripe, luminance(ripe) + LADDER_STEP);
+  if (stage === 1) return unripe;
+  const sprout = new Color()
+    .setHSL(base.h, base.s * 0.55, Math.min(1, base.l + 0.05), SRGBColorSpace)
+    .lerp(SPROUT_TINT, 0.22);
+  return liftAbove(sprout, luminance(unripe) + LADDER_STEP);
+}
+
+/** Rec. 709 luma on display (sRGB) values — what a greyscale screenshot shows (RD-2). */
+export function luminance(c: Color): number {
+  const rgb = { r: 0, g: 0, b: 0 };
+  c.getRGB(rgb, SRGBColorSpace);
+  return 0.2126 * rgb.r + 0.7152 * rgb.g + 0.0722 * rgb.b;
 }
 
 export const cropColor = (crop: CropId, stage: Stage): Color => stageColor(CROP_BY_ID[crop].color, stage);

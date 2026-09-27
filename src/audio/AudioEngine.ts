@@ -40,4 +40,4 @@ export type MusicId = 'morning' | 'dusk' | 'match';
 
 /** Pentatonic cascade ladder (01 §14, 03 §11): semitone offsets per depth. */
 export const CASCADE_STEPS = [0, 2, 4, 7, 9, 12, 14, 16];
-export const cascadeRate = (depth: number, max = 8) => 2 ** (CASCADE_STEPS[Math.min(max, Math.max(1, depth)) - 1]! / 12);
+export const cascadeRate = (depth: number, max = 8) => 2 ** (CASCADE_STEPS[Math.min(max, CASCADE_STEPS.length, Math.max(1, depth)) - 1]! / 12);

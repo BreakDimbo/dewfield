@@ -1,19 +1,21 @@
 import type { AppState } from '@/core/flow/appFsm';
 import { bus, type Cue } from '@/state/bus';
+import { gameCfg } from '@/state/config';
 import { cascadeRate, type AudioEngine, type MusicId } from './AudioEngine';
 
 /** cue → sprite (03 §11 cueMap). Harvest voices by stage; cascade depth climbs the pentatonic ladder. */
-export function cueToSound(engine: AudioEngine, c: Cue): void {
+export function cueToSound(engine: AudioEngine, c: Cue, maxSteps = 8): void {
+  const rate = (depth: number) => cascadeRate(depth, maxSteps);
   switch (c.t) {
     case 'swap':
       return engine.play('swap');
     case 'reject':
       return engine.play('reject');
     case 'match':
-      return engine.play('tick', { rate: cascadeRate(c.depth) });
+      return engine.play('tick', { rate: rate(c.depth) });
     case 'harvest':
-      if (c.stage === 2) return engine.play('harvest2', { rate: cascadeRate(c.depth), volume: c.delivered ? 1 : 0.7 });
-      if (c.stage === 1) return engine.play('harvest1', { rate: cascadeRate(c.depth) });
+      if (c.stage === 2) return engine.play('harvest2', { rate: rate(c.depth), volume: c.delivered ? 1 : 0.7 });
+      if (c.stage === 1) return engine.play('harvest1', { rate: rate(c.depth) });
       return engine.play('harvest0', { volume: 0.6 });
     case 'special':
       return engine.play(c.kind === 'dewOrb' ? 'dew' : c.kind === 'bee' ? 'bee' : 'sickle');
@@ -41,5 +43,5 @@ export function musicFor(app: AppState, phase: 'morning' | 'dusk' | undefined): 
 }
 
 export function startAudioDirector(engine: AudioEngine): () => void {
-  return bus.on('cue', (c) => cueToSound(engine, c));
+  return bus.on('cue', (c) => cueToSound(engine, c, gameCfg().audio.cascadeMaxSteps));
 }

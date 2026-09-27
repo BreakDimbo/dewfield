@@ -9,7 +9,11 @@ export default defineConfig({
     baseURL: 'http://localhost:5391',
     ...devices['Desktop Chrome'],
     viewport: { width: 1280, height: 800 },
-    launchOptions: { args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] },
+    launchOptions: {
+      args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'],
+      // Optional: use a preinstalled Chromium instead of Playwright's pinned download.
+      executablePath: process.env.PW_CHROMIUM_PATH || undefined,
+    },
   },
   webServer: {
     command: 'pnpm dev',

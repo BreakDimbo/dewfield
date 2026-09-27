@@ -1,6 +1,6 @@
 import {
   BufferAttribute,
-  BufferGeometry,
+  type BufferGeometry,
   CanvasTexture,
   CapsuleGeometry,
   Color,

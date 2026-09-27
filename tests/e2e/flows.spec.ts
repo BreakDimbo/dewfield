@@ -28,7 +28,8 @@ test('① day 1: T1 → T2 → guided watering → C01 → sleep → reload keep
   if (await confirm.isVisible().catch(() => false)) await confirm.click();
   await waitApp(page, 'night');
   await page.locator('[data-phase="dark"]').click();
-  await waitApp(page, 'hub');
+  // The overnight growth wave is frame-driven; skip it like the runs above (software GL can run at ~1 fps).
+  await expect.poll(async () => (await hook(page, 'skipAnimations'), app(page)), { timeout: 30_000 }).toBe('hub');
   const before = (await hook(page, 'home')) as { day: number; field: unknown; wallet: unknown };
   expect(before.day).toBe(2);
   await page.reload();
@@ -44,8 +45,12 @@ test('② a failed commission keeps partial delivery; the retry shows what is le
   await freshGame(page, 4);
   await playRun(page);
   await backToTerrace(page);
-  const h = (await hook(page, 'home')) as { commissions: { active: Record<string, unknown> } & Record<string, unknown> };
-  await hook(page, 'patchHome', { commissions: { ...h.commissions, active: { ...h.commissions.active, items: [{ crop: 'tomato', count: 30 }] } } });
+  const h = (await hook(page, 'home')) as {
+    commissions: { active: Record<string, unknown> } & Record<string, unknown>;
+  };
+  await hook(page, 'patchHome', {
+    commissions: { ...h.commissions, active: { ...h.commissions.active, items: [{ crop: 'tomato', count: 30 }] } },
+  });
   await page.getByRole('button', { name: '委托' }).click();
   await page.getByRole('button', { name: '开始' }).click();
   await waitApp(page, 'match');
@@ -70,7 +75,10 @@ test('③ buying the wind chime gives +1 move on the next run', async ({ page })
   await freshGame(page, 5);
   await playRun(page);
   await backToTerrace(page);
-  await hook(page, 'patchHome', { wallet: { dewdrop: 999 }, tutorial: { done: true, completedSteps: ['G0', 'G1', 'G2', 'G3', 'G4', 'G5'], seenTips: [] } });
+  await hook(page, 'patchHome', {
+    wallet: { dewdrop: 999 },
+    tutorial: { done: true, completedSteps: ['G0', 'G1', 'G2', 'G3', 'G4', 'G5'], seenTips: [] },
+  });
   await dismissTips(page);
   await page.getByRole('button', { name: '商店' }).click();
   await page.getByTestId('decor-windChime').getByRole('button').click();
@@ -91,7 +99,9 @@ test('④ a corrupt save shows the recovery notice and keeps the raw text', asyn
   });
   await page.reload();
   await expect(page.getByText(/存档无法读取/)).toBeVisible();
-  const kept = await page.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith('dewfield:save:corrupt:')).length);
+  const kept = await page.evaluate(
+    () => Object.keys(localStorage).filter((k) => k.startsWith('dewfield:save:corrupt:')).length,
+  );
   expect(kept).toBe(1);
   expect(await app(page)).toBe('title');
 });
