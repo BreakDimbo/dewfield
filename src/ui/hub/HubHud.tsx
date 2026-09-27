@@ -82,6 +82,7 @@ export function HubHud() {
           >
             <BeeIcon />
             {beeUnlocked ? S.bee : S.beeLockedShort}
+            {!beeUnlocked && <small className={css.lockNote}>{S.beeLocked}</small>}
           </button>
           <button className={ui.secondary} disabled={!can('shop')} onClick={() => gameController.openPanel('shop')}>
             <ShopIcon />

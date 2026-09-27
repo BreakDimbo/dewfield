@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { findGroups } from '@/core/board/match';
 import { DECOR } from '@/core/config/decor';
 import { DEFAULT_TUNABLES } from '@/core/config/tunables';
-import { carePlaceBee, carePointsMax, effectiveModifiers, purchaseDecor, terraceLevel } from './decor';
+import { carePlaceBee, carePointsMax, effectiveModifiers, isBeeTarget, purchaseDecor, terraceLevel } from './decor';
 import { fieldBoard, newHomestead, sleep, startRun } from './homestead';
 import type { HomesteadState } from './state';
 
@@ -68,5 +68,15 @@ describe('release bees (P2-07)', () => {
     expect(r.home.care).toMatchObject({ pointsLeft: 2, beeUsed: true });
     expect(findGroups(fieldBoard(r.home).cells)).toEqual([]);
     expect(startRun(r.home, cfg).run.board.cells[24]).toEqual({ uid: 50, kind: 'bee' });
+  });
+  it('isBeeTarget (hover telegraph, P2-14) accepts only plain crops', () => {
+    const h = unlocked();
+    expect(isBeeTarget(h, { x: 3, y: 3 })).toBe(true);
+    expect(isBeeTarget(h, { x: 9, y: 0 })).toBe(false);
+    const withSpecial = { ...h, field: { ...h.field, rows: h.field.rows.map((r, y) => (y === 0 ? r.replace(/^T2/, 'T2h') : r)) } };
+    expect(isBeeTarget(withSpecial, { x: 0, y: 0 })).toBe(false);
+    const r = carePlaceBee(h, { x: 3, y: 3 }, cfg);
+    if (!r.ok) throw new Error(r.reason);
+    expect(isBeeTarget(r.home, { x: 3, y: 3 })).toBe(false);
   });
 });

@@ -75,6 +75,12 @@
   flex-shrink: 0;
   padding: 0 16px;
 }
+.lockNote {
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--c-ink-2);
+}
 .confirm {
   position: absolute;
   bottom: calc(max(18px, env(safe-area-inset-bottom)) + 72px);

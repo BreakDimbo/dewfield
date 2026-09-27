@@ -1,6 +1,7 @@
 import { useFrame } from '@react-three/fiber';
 import { useMemo } from 'react';
 import { AdditiveBlending, Color, Group, Mesh, MeshBasicMaterial, PlaneGeometry, SphereGeometry } from 'three';
+import { isBeeTarget } from '@/core/homestead/decor';
 import { bandTexture } from '@/render/assets/greybox';
 import { PAL } from '@/render/assets/palette';
 import { cellZ } from '@/render/field/layout';
@@ -47,7 +48,8 @@ export function RowHighlight() {
       (band.material as MeshBasicMaterial).opacity = pulse;
       const row = row0!;
       vfx?.telegraph(ROW_KEY, Array.from({ length: 7 }, (_, x) => ({ x, y: row })), 'dewOrb', 0.75 + 0.5 * pulse);
-    } else if (app === 'hub' && ui.careMode === 'bee' && ui.hoverCell) {
+    } else if (app === 'hub' && ui.careMode === 'bee' && ui.hoverCell && home && isBeeTarget(home, ui.hoverCell)) {
+      // P2-14: only plain crops are valid — special / bee cells get no telegraph
       vfx?.telegraph(ROW_KEY, [ui.hoverCell], 'bee', 0.9 + 0.4 * Math.sin(state.clock.elapsedTime * 5));
     } else vfx?.telegraph(ROW_KEY, [], 'dewOrb', 0);
     const watered = new Set(home?.care.wateredRows ?? []);
