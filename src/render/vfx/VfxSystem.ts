@@ -206,6 +206,44 @@ export class VfxSystem implements VfxAdapter {
       this.spawn(cellX(pos.x) + (rnd() - 0.5) * 0.4, 0.35, cellZ(pos.y) + (rnd() - 0.5) * 0.4, 0, 0.9 + rnd() * 0.5, 0, 0.7, 0.09, new Color('#CFF0B8'), 0, 1.5);
   }
 
+  /** P2-11: dawn motes rising over one column of the field; leaves headroom under the particle cap. */
+  morningShimmer(column: number, calm: boolean): void {
+    const n = calm ? 3 : 9;
+    const warm = new Color('#FFF1C4');
+    const dew = new Color(PAL.dew).lerp(new Color('#FFFFFF'), 0.35);
+    for (let i = 0; i < n; i++) {
+      if (this.particles.length >= this.maxParticles * 0.6) return;
+      const lift = calm ? 0 : 0.25 + rnd() * 0.35;
+      this.spawn(
+        cellX(column) + (rnd() - 0.5) * 0.9,
+        0.25 + rnd() * 0.5,
+        cellZ(rnd() * 6),
+        calm ? 0 : (rnd() - 0.5) * 0.15,
+        lift,
+        0,
+        calm ? 0.9 : 1.1 + rnd() * 0.5,
+        0.07 + rnd() * 0.05,
+        rnd() < 0.5 ? warm : dew,
+        0,
+        calm ? 0 : 0.6,
+      );
+    }
+  }
+
+  /** P2-13 terrace level-up: a ring of gold motes around the terrace edge; still and sparser under reduced motion. */
+  terraceSparkle(calm: boolean): void {
+    const n = calm ? 12 : 36;
+    const gold = new Color(PAL.gold).lerp(new Color('#FFF6DA'), 0.45);
+    const leaf = new Color(PAL.leafLight).lerp(new Color('#FFFFFF'), 0.3);
+    for (let i = 0; i < n; i++) {
+      if (this.particles.length >= this.maxParticles * 0.75) return;
+      const a = (i / n) * Math.PI * 2 + rnd() * 0.2;
+      const r = 6.2 + rnd() * 0.9;
+      const up = calm ? 0 : 1.2 + rnd() * 1.4;
+      this.spawn(Math.cos(a) * r, 0.3 + rnd() * 0.8, Math.sin(a) * r, 0, up, 0, calm ? 0.8 : 0.9 + rnd() * 0.5, 0.1 + rnd() * 0.06, i % 3 ? gold : leaf, calm ? 0 : 1.2, calm ? 0 : 1.4);
+    }
+  }
+
   rain(pos: Pos): void {
     for (let i = 0; i < 7; i++)
       this.spawn(cellX(pos.x) + (rnd() - 0.5) * 0.7, 1.6 + rnd() * 0.6, cellZ(pos.y) + (rnd() - 0.5) * 0.7, 0, -2.5, 0, 0.55, 0.1, new Color(PAL.dew), 6, 0.2);

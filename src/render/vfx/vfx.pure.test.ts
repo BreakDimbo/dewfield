@@ -43,4 +43,28 @@ describe('VfxSystem (P2-11)', () => {
     expect(count(half) / count(full)).toBeGreaterThan(0.35);
     expect(count(half) / count(full)).toBeLessThan(0.65);
   });
+
+  it('morning shimmer stays gentle and leaves headroom under the cap', () => {
+    const v = new VfxSystem(100, new MeshStandardMaterial());
+    v.morningShimmer(0, false);
+    expect(count(v)).toBe(9);
+    for (let k = 0; k < 50; k++) v.morningShimmer(k % 7, false);
+    expect(count(v)).toBeLessThanOrEqual(60);
+    const calm = new VfxSystem(100, new MeshStandardMaterial());
+    calm.morningShimmer(3, true);
+    expect(count(calm)).toBe(3);
+  });
+
+  it('terrace level-up sparkle rings the terrace, sparser under reduced motion (P2-13)', () => {
+    const v = new VfxSystem(1000, new MeshStandardMaterial());
+    v.terraceSparkle(false);
+    const calm = new VfxSystem(1000, new MeshStandardMaterial());
+    calm.terraceSparkle(true);
+    expect(count(calm)).toBeLessThan(count(v));
+    const ps = (v as unknown as { particles: { p: { x: number; z: number } }[] }).particles;
+    for (const p of ps) expect(Math.hypot(p.p.x, p.p.z)).toBeGreaterThan(5.5);
+    const full = new VfxSystem(40, new MeshStandardMaterial());
+    full.terraceSparkle(false);
+    expect(count(full)).toBeLessThanOrEqual(30);
+  });
 });
