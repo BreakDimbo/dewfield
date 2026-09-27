@@ -13,6 +13,7 @@ export const autoplayStats = { moves: 0, runs: 0 };
 
 /** `?autoplay=1` (03 §16): greedy bot through the whole loop, so choreography consistency is exercised. */
 export function startAutoplay(speed = 4): () => void {
+  (window as unknown as { __DEWFIELD_AUTOPLAY__: typeof autoplayStats }).__DEWFIELD_AUTOPLAY__ = autoplayStats;
   const id = window.setInterval(() => {
     const app = useAppStore.getState();
     const ui = useUiStore.getState();
