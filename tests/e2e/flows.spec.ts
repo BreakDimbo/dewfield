@@ -85,11 +85,13 @@ test('③ buying the wind chime gives +1 move on the next run', async ({ page })
   await page.getByTestId('decor-windChime').getByRole('button').click();
   await expect(page.getByTestId('decor-windChime')).toContainText('已拥有');
   await page.getByRole('button', { name: '关闭' }).click();
+  // The active commission's base moves come from the tuned content table; the chime adds exactly one.
+  const base = ((await hook(page, 'home')) as { commissions: { active: { moves: number } } }).commissions.active.moves;
   await page.getByRole('button', { name: '委托' }).click();
-  await expect(page.getByText('15 步')).toBeVisible();
+  await expect(page.getByText(`${base + 1} 步`)).toBeVisible();
   await page.getByRole('button', { name: '开始' }).click();
   await waitApp(page, 'match');
-  expect((await hook(page, 'getState')).movesLeft).toBe(15);
+  expect((await hook(page, 'getState')).movesLeft).toBe(base + 1);
 });
 
 test('④ a corrupt save shows the recovery notice and keeps the raw text', async ({ page }) => {
